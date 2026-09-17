@@ -1,0 +1,5 @@
+# Content-hashed, immutable files — one-year cache, matches the former
+# vercel.json rule for the same path.
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

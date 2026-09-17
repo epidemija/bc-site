@@ -1,0 +1,99 @@
+# BC IMMOWERT — Apache configuration for cPanel hosting
+#
+# Equivalent to the former vercel.json (security headers, caching,
+# redirects), now as .htaccess for Apache/cPanel. Lives in public/, so
+# Astro copies it unchanged into dist/ on every `npm run build` — it lands
+# next to index.html & co. with no extra step, as soon as dist/'s contents
+# are uploaded to the server.
+#
+# Assumes mod_rewrite, mod_headers and mod_deflate — enabled by default on
+# virtually every cPanel host.
+
+# ---------------------------------------------------------------- Redirects
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # http -> https
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # www -> apex (canonical domain, see PUBLIC_SITE_URL in .env)
+  RewriteCond %{HTTP_HOST} ^www\.bc-immowert\.de$ [NC]
+  RewriteRule ^ https://bc-immowert.de%{REQUEST_URI} [L,R=301]
+
+  # Contact form: ContactForm.astro posts to /api/kontakt (no extension,
+  # never changed) — this is what actually runs the request, a plain PHP
+  # file at api/kontakt.php. See that file for the endpoint itself and
+  # api-geheim/kontakt-geheim.example.php for the secrets it needs.
+  RewriteRule ^api/kontakt/?$ api/kontakt.php [L,QSA]
+</IfModule>
+
+# ---------------------------------------------------------------- Security headers
+<IfModule mod_headers.c>
+  # CSP script-src uses exact SHA-256 hashes instead of 'unsafe-inline' for
+  # this site's own small inline scripts (never 'unsafe-inline' for those —
+  # keeps the policy meaningful). Each hash below is tied to one script's
+  # exact built bytes; if that script's source changes, its hash changes
+  # too and the browser silently blocks it (Console shows a CSP violation
+  # naming the new expected hash) until this line is updated to match.
+  # Current entries, in order:
+  #   1. the early <html class="no-js"> removal script (every page)
+  #   2. ContactForm.astro's category/service + submit script (/kontakt/)
+  #   3. MapEmbed.astro's consent-gated map loader (/kontakt/)
+  #   4. DatawrapperEmbed.astro's consent-gated chart loader (the three
+  #      category pages: /gutachten/, /ingenieurleistungen/,
+  #      /dienstleistungen/)
+  #
+  # style-src / img-src / font-src / connect-src also allow
+  # static.dwcdn.net and pt.dwcdn.net (14.09.2026) — Datawrapper's embed.js
+  # itself only ever needed datawrapper.dwcdn.net (already above), but it
+  # loads the chart's own stylesheet and a small "entitlements" check from
+  # these two additional Datawrapper-owned hosts. Without them the browser
+  # silently blocks those requests and the chart never appears (confirmed
+  # live via the browser console: "Refused to load the stylesheet
+  # 'https://static.dwcdn.net/css/roboto.css'..." and the same for
+  # pt.dwcdn.net and a static.dwcdn.net/workspaces/.../entitlements
+  # connect-src violation) — not a bug in our build, Datawrapper simply
+  # serves chart assets from more of their own subdomains than the policy
+  # originally listed.
+  # To recompute a hash after changing one of these scripts: build the
+  # site, take the exact bytes between that <script...> tag's ">" and its
+  # "</script>", and base64-encode their SHA-256 digest.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-TPA3q1Sx010m/tEhsX6Wa0Z6bmG4UzHL7a9HKPX2kco=' 'sha256-+k+gWoZ7S4TLgkzskg9x7ERVts6d4ptqoI3o3i38qT4=' 'sha256-uZnIElLzGuVenSLlMLCPUIG0gKVrODWw1lo6P+WK4Wo=' 'sha256-ywfBXEn/nqpxjhjAJMFmrf2O0m8YpmardxaoAVExhH0=' https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://datawrapper.dwcdn.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://static.dwcdn.net https://pt.dwcdn.net; img-src 'self' data: https://www.gstatic.com https://datawrapper.dwcdn.net https://static.dwcdn.net https://pt.dwcdn.net; font-src 'self' https://static.dwcdn.net; connect-src 'self' https://www.google.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://datawrapper.dwcdn.net https://static.dwcdn.net https://pt.dwcdn.net; frame-src 'self' https://www.openstreetmap.org https://www.google.com https://datawrapper.dwcdn.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+  Header always set X-Frame-Options "DENY"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+
+  # robots.txt/llms.txt/the sitemap are Astro endpoints with no file
+  # extension Apache recognizes — without an explicit charset, Apache serves
+  # them as generic text/plain with no charset, which breaks German umlauts.
+  # Matches the Content-Type rules from the former vercel.json.
+  <FilesMatch "^(robots\.txt|llms\.txt)$">
+    Header set Content-Type "text/plain; charset=utf-8"
+  </FilesMatch>
+  <FilesMatch "\.xml$">
+    Header set Content-Type "application/xml; charset=utf-8"
+  </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------- Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+  AddOutputFilterByType DEFLATE application/xml application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+  # AVIF/WebP/JPEG are already compressed — deflating them would only make
+  # them bigger or do nothing, so they're deliberately left off this list.
+</IfModule>
+
+# ---------------------------------------------------------------- Misc
+Options -Indexes
+
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+ErrorDocument 404 /404.html

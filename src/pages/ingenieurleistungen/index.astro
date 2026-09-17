@@ -1,0 +1,215 @@
+---
+/**
+ * Ingenieurleistungen — category page.
+ *
+ * Same shape as /gutachten/: an animated header (a category has no single
+ * subject to photograph — docs/MASTER-TEMPLATE.md §5d), links to the two
+ * services below it, the client's own copy, and the shared service area.
+ *
+ * The graphic is ThermalScan: a wall section losing heat until insulation is
+ * applied, which is what the larger of the two services actually does.
+ */
+import { Image } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import AnimatedPageHero from "../../components/sections/AnimatedPageHero.astro";
+import ThermalScan from "../../components/sections/ThermalScan.astro";
+import Icon from "../../components/ui/Icon.astro";
+import StepElevation from "../../components/ui/StepElevation.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema, serviceSchemas } from "../../seo/schema";
+import { routes } from "../../config/site";
+import imgEnergetisch from "../../assets/images/hero-bc-immowert-energetische-modernisierung.jpg";
+import imgEinzel from "../../assets/images/hero-bc-immowert-einzelmodernisierung.jpg";
+import ClosingCta from "../../components/sections/ClosingCta.astro";
+import EinsatzgebietSection from "../../components/sections/EinsatzgebietSection.astro";
+
+const page = PAGES.ingenieurleistungen;
+
+/** The two services that sit below this page. */
+const leistungen = [
+  {
+    name: "Energetische Modernisierung",
+    description:
+      "Entwicklung und Begleitung energieeffizienter Maßnahmen zur nachhaltigen Optimierung " +
+      "Ihrer Immobilie.",
+    href: routes.energetischeModernisierung,
+    img: imgEnergetisch,
+    imgAlt: "Energetische Modernisierung einer Gebäudefassade mit neuer Dämmung",
+  },
+  {
+    name: "Einzelmaßnahmen",
+    description:
+      "Gezielte Planung und Umsetzung einzelner Maßnahmen zur funktionalen und technischen " +
+      "Verbesserung.",
+    href: routes.einzelmodernisierung,
+    img: imgEinzel,
+    imgAlt: "Umbauarbeiten an einer Bestandsimmobilie während einer Einzelmaßnahme",
+  },
+];
+
+/**
+ * What the office does in this field, drawn from the third paragraph of the
+ * client's text so the list and the prose cannot say different things.
+ * Icon per item, same pattern as leistungsfelder on uber-uns, rather than a
+ * single repeated checkmark.
+ */
+const arbeitsfelder: { label: string; icon: "trend" | "target" | "building" | "draft" | "helmet" }[] = [
+  { label: "Planung energetischer Modernisierungen", icon: "trend" },
+  { label: "Planung baulicher Einzelmaßnahmen", icon: "target" },
+  { label: "Begleitung von Nutzungsänderungen", icon: "building" },
+  { label: "Optimierung und Änderung bestehender Grundrisse", icon: "draft" },
+  { label: "Technische Beratung bei Umbauten und Modernisierungen", icon: "helmet" },
+];
+
+const jsonLd = subpageSchema(
+  page,
+  serviceSchemas(
+    leistungen.map((l) => ({ name: l.name, description: l.description, path: l.href }))
+  )
+);
+---
+
+<BaseLayout page="ingenieurleistungen" jsonLd={jsonLd} headerVariant="overlay">
+  <AnimatedPageHero
+    title="Ingenieurleistungen"
+    subtitle="Planung und Begleitung für bestehende Immobilien"
+    intro="Energetische Modernisierung oder bauliche Einzelmaßnahmen – wir prüfen die technischen Möglichkeiten, planen die erforderlichen Maßnahmen und begleiten Ihr Vorhaben auf Wunsch bis zur Umsetzung."
+    pattern={false}
+  >
+    <ThermalScan />
+  </AnimatedPageHero>
+
+  <Breadcrumbs page="ingenieurleistungen" force />
+
+  {/* ---------------- The two services ---------------- */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="leistungen-titel"
+  >
+    <div class="mb-10 max-w-2xl lg:mb-14">
+      <h2
+        id="leistungen-titel"
+        class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+        data-reveal
+      >
+        Zwei Wege, den Bestand weiterzuentwickeln
+      </h2>
+    </div>
+
+    <ul class="grid list-none grid-cols-1 gap-6 p-0 sm:grid-cols-2 lg:gap-8">
+      {
+        leistungen.map((item, i) => (
+          <li
+            class="reveal-on-scroll group relative overflow-hidden rounded-md border border-[color:var(--bc-border)] bg-surface"
+            data-reveal
+            style={`transition-delay:${i * 120}ms`}
+          >
+            <div class="relative h-[220px] overflow-hidden lg:h-[280px]">
+              <Image
+                src={item.img}
+                widths={[560, 840]}
+                sizes="(min-width: 640px) 50vw, 100vw"
+                quality={90}
+                alt={item.imgAlt}
+                loading="lazy"
+                class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+            </div>
+            <div class="p-6 lg:p-8">
+              <h3 class="font-display text-xl text-ink lg:text-[23px]">
+                <a href={item.href} class="after:absolute after:inset-0 after:content-['']">
+                  {item.name}
+                </a>
+              </h3>
+              <span
+                class="mt-2 block h-[3px] w-8 rounded-full bg-[color:var(--bc-accent-deco)] transition-all duration-500 group-hover:w-14"
+                aria-hidden="true"
+              />
+              <p class="mt-4 text-[15px] leading-relaxed text-muted">{item.description}</p>
+              <span
+                class="bc-btn bc-btn-ghost mt-5 text-sm group-hover:text-ink"
+                aria-hidden="true"
+              >
+                Mehr erfahren
+                <Icon name="arrow-dr" />
+              </span>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {/* ---------------- Why planning first ---------------- */}
+  {/* No border: fades to the page colour over a fixed 96px at top and
+      bottom, same treatment as the other banded sections on the site.
+      StepElevation is one of the three drawing patterns
+      (gutachten, dienstleistungen, and others), a stepped/terraced
+      elevation-drawing motif here so a page with several bands like this
+      one doesn't read as one texture repeated everywhere. */}
+  <section
+    class="relative overflow-hidden"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, var(--bc-surface) 96px, var(--bc-surface) calc(100% - 96px), var(--bc-page) 100%)"
+    aria-labelledby="planung-titel"
+  >
+    <StepElevation />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
+        <div>
+          <h2
+            id="planung-titel"
+            class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+            data-reveal
+          >
+            Jede Immobilie verändert sich im Laufe der Jahre
+          </h2>
+
+          <div class="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {
+              arbeitsfelder.map((feld, i) => (
+                <div
+                  class="reveal-on-scroll group flex items-start gap-3 rounded-md p-3 transition-colors hover:bg-[color:var(--bc-surface)]"
+                  data-reveal
+                  style={`transition-delay:${i * 60}ms`}
+                >
+                  <Icon name={feld.icon} class="mt-0.5 h-6 w-6 shrink-0 text-accent-deco" />
+                  <span class="pt-0.5 text-[15px] font-medium text-ink">{feld.label}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="max-w-2xl">
+          <p class="reveal-on-scroll text-base leading-relaxed text-muted" data-reveal>
+            Gebäude und die Anforderungen ihrer Nutzer verändern sich mit der Zeit. Vielleicht
+            soll ein Keller künftig als Wohnraum genutzt, eine Wand geöffnet, der Grundriss
+            verändert oder das Gebäude energetisch modernisiert werden. Bevor die Arbeiten
+            beginnen, sollte geklärt sein, was technisch möglich ist und welche weiteren
+            Anforderungen berücksichtigt werden müssen.
+          </p>
+          <p
+            class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+            data-reveal
+            style="transition-delay:80ms"
+          >
+            Als Bauingenieur begleiten wir Eigentümer, private Bauherren und Unternehmen von der
+            ersten technischen Einschätzung über die Planung bis zur Umsetzung. Dabei betrachten
+            wir nicht nur die einzelne Maßnahme, sondern auch ihre Auswirkungen auf den
+            bestehenden Baukörper und angrenzende Bauteile.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Area served ---------------- */}
+  <EinsatzgebietSection />
+
+  {/* ---------------- Closing ---------------- */}
+  <ClosingCta
+    heading="Von der ersten Idee bis zur Umsetzung"
+    text="Sie möchten Ihre Immobilie energetisch modernisieren, einen Keller zu Wohnraum umnutzen, eine Wand öffnen oder einen bestehenden Grundriss verändern? Schildern Sie uns kurz Ihr Vorhaben. Wir prüfen die Ausgangssituation und besprechen mit Ihnen, welche nächsten Schritte sinnvoll sind."
+    buttonHref={routes.kontakt}
+  />
+</BaseLayout>

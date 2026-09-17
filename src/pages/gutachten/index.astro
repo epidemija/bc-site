@@ -1,0 +1,207 @@
+---
+/**
+ * Gutachten — category page.
+ *
+ * A hub: it explains what an expert report is for, links to the two individual
+ * services below it, and states the area the office works in. The copy is the
+ * client's own wording; nothing here is invented.
+ *
+ * Follows docs/MASTER-TEMPLATE.md: one <h1> in the page header, <h2> per
+ * section, metadata from src/config/pages.ts, structured data from src/seo.
+ */
+import { Image } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import AnimatedPageHero from "../../components/sections/AnimatedPageHero.astro";
+import ValuationScan from "../../components/sections/ValuationScan.astro";
+import Icon from "../../components/ui/Icon.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { routes } from "../../config/site";
+import { EINSATZGEBIET_NACHSATZ } from "../../config/areas";
+import imgImmobilienbewertung from "../../assets/images/hero-bc-immowert-immobilienbewertung.jpg";
+import imgBauschaden from "../../assets/images/hero-bc-immowert-bauschadenbewertung.jpg";
+import ClosingCta from "../../components/sections/ClosingCta.astro";
+import EinsatzgebietSection from "../../components/sections/EinsatzgebietSection.astro";
+import FloorPlanLines from "../../components/ui/FloorPlanLines.astro";
+
+const jsonLd = subpageSchema(PAGES.gutachten);
+
+/** The two services that sit below this page. */
+const leistungen = [
+  {
+    name: "Immobilienbewertungen",
+    description:
+      "Wir ermitteln den Wert Ihrer Immobilie nachvollziehbar und passend zu Ihrem Anlass – " +
+      "beispielsweise für Kauf, Verkauf, Erbschaft, Schenkung oder andere Vermögensentscheidungen.",
+    href: routes.immobilienbewertung,
+    img: imgImmobilienbewertung,
+    imgAlt:
+      "Sachverständiger bei der Wertermittlung einer Immobilie am Schreibtisch mit Unterlagen",
+  },
+  {
+    name: "Bauschadensbewertung",
+    description:
+      "Wir untersuchen Bauschäden und Auffälligkeiten vor Ort, gehen möglichen Ursachen nach " +
+      "und zeigen auf, welche weiteren Untersuchungen oder Maßnahmen sinnvoll sind.",
+    href: routes.bauschadenbewertung,
+    img: imgBauschaden,
+    imgAlt: "Begutachtung eines Bauschadens an einer Gebäudefassade",
+  },
+  {
+    name: "Restnutzungsdauergutachten",
+    description:
+      "Eine kürzere tatsächliche Nutzungsdauer kann bei vermieteten Immobilien eine höhere " +
+      "jährliche AfA ermöglichen. Wir untersuchen die individuellen Gegebenheiten des Gebäudes " +
+      "und ermitteln die Restnutzungsdauer nachvollziehbar für die steuerliche Verwendung.",
+    href: routes.restnutzungsdauergutachten,
+    // TEMPORARY: no dedicated photo exists yet for this service — reusing the
+    // Immobilienbewertung hero image, same as on the page itself.
+    img: imgImmobilienbewertung,
+    imgAlt: "Sachverständiger bei der Beurteilung der Restnutzungsdauer einer vermieteten Immobilie",
+  },
+];
+
+---
+
+<BaseLayout page="gutachten" jsonLd={jsonLd} headerVariant="overlay">
+  <AnimatedPageHero
+    title="Gutachten"
+    subtitle="Fundierte Entscheidungen auf einer verlässlichen Grundlage"
+    intro={`Immobilienbewertungen, Wertermittlungen, Kurzgutachten, Verkehrswertgutachten und Bauschadensgutachten – <span class="lg:whitespace-nowrap">unabhängig erstellt und verständlich dokumentiert.</span>`}
+    pattern={false}
+  >
+    <ValuationScan />
+  </AnimatedPageHero>
+
+  <Breadcrumbs page="gutachten" force />
+
+  {/* ---------------- The two services ---------------- */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="leistungen-titel"
+  >
+    <div class="mb-10 max-w-2xl lg:mb-14">
+      <h2
+        id="leistungen-titel"
+        class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+        data-reveal
+      >
+        Was wir begutachten
+      </h2>
+    </div>
+
+    <ul class="grid list-none grid-cols-1 gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      {
+        leistungen.map((item, i) => (
+          <li
+            class="reveal-on-scroll group relative overflow-hidden rounded-md border border-[color:var(--bc-border)] bg-surface"
+            data-reveal
+            style={`transition-delay:${i * 120}ms`}
+          >
+            <div class="relative h-[220px] overflow-hidden lg:h-[280px]">
+              <Image
+                src={item.img}
+                widths={[560, 840]}
+                sizes="(min-width: 640px) 50vw, 100vw"
+                quality={90}
+                alt={item.imgAlt}
+                loading="lazy"
+                class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+            </div>
+            <div class="p-6 lg:p-8">
+              <h3 class="font-display text-xl text-ink lg:text-[23px]">
+                {/* Stretched link: the whole card is clickable, the accessible
+                    name stays the service title. */}
+                <a href={item.href} class="after:absolute after:inset-0 after:content-['']">
+                  {item.name}
+                </a>
+              </h3>
+              <span
+                class="mt-2 block h-[3px] w-8 rounded-full bg-[color:var(--bc-accent-deco)] transition-all duration-500 group-hover:w-14"
+                aria-hidden="true"
+              />
+              <p class="mt-4 text-[15px] leading-relaxed text-muted">{item.description}</p>
+              <span
+                class="bc-btn bc-btn-ghost mt-5 text-sm group-hover:text-ink"
+                aria-hidden="true"
+              >
+                Mehr erfahren
+                <Icon name="arrow-dr" />
+              </span>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {/* ---------------- Why an expert report ---------------- */}
+  {/* No border: fades to the page colour over a fixed 96px at top and
+      bottom, same treatment as the other banded sections on the site.
+      FloorPlanLines is one of the three drawing patterns used on this same kind of
+      band elsewhere (aufmass, energetische-modernisierung, and others) —
+      reused here rather than inventing a different texture. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="warum-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, var(--bc-surface) 96px, var(--bc-surface) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <FloorPlanLines />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center lg:gap-20">
+        <div>
+          <h2
+            id="warum-titel"
+            class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+            data-reveal
+          >
+            Entscheidungen brauchen eine belastbare Grundlage
+          </h2>
+          <p class="reveal-on-scroll mt-6 text-base leading-relaxed text-muted" data-reveal>
+            Ob Kauf oder Verkauf einer Immobilie, Erbschaft, Schenkung, Scheidung oder die
+            Beurteilung eines Bauschadens – viele Entscheidungen sollten nicht auf Vermutungen,
+            sondern auf einer fachlich fundierten Grundlage getroffen werden. Ein unabhängiges
+            Gutachten schafft Klarheit, reduziert Unsicherheiten und gibt Eigentümern, Käufern
+            sowie Institutionen eine nachvollziehbare Entscheidungsbasis.
+          </p>
+          <p
+            class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+            data-reveal
+            style="transition-delay:100ms"
+          >
+            Als Bauingenieur und DEKRA-zertifizierter Sachverständiger für Immobilienbewertung
+            sowie Sachverständiger für Bauschadensbewertungen erstellen wir Immobilienbewertungen,
+            Wertermittlungen, Kurzgutachten, Verkehrswertgutachten und Bauschadensgutachten für
+            private, gewerbliche und öffentliche Auftraggeber.
+          </p>
+        </div>
+
+        {/* Placeholder — a real photo goes here later. */}
+        <div
+          class="reveal-on-scroll relative h-[280px] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)] bg-surface lg:h-[380px]"
+          data-reveal
+          style="transition-delay:150ms"
+          aria-hidden="true"
+        >
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted">
+            <Icon name="building" class="h-8 w-8 opacity-40" />
+            <span class="text-xs font-semibold uppercase tracking-wide opacity-60">Bild folgt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Area served ---------------- */}
+  <EinsatzgebietSection />
+
+  {/* ---------------- Closing ---------------- */}
+  <ClosingCta
+    heading="Sprechen Sie uns an"
+    text="Schildern Sie uns worum es geht. Wir prüfen Ihre Anfrage und melden uns persönlich bei Ihnen, um den passenden Umfang und die nächsten Schritte zu besprechen."
+    buttonHref={routes.kontakt}
+  />
+
+
+</BaseLayout>

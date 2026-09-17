@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seite nicht gefunden – BC IMMOWERT</title>
+    <!--
+      Must be served with a real HTTP 404 status code. A 200 response with this
+      content is a "soft 404" and causes Google to index an error page.
+      Netlify/Cloudflare Pages do this automatically for /404.html; for nginx
+      see docs/SECURITY.md.
+    -->
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#c39a53" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-variable.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/manrope-latin-variable.woff2" crossorigin />
+    <style>
+      /*
+        This page cannot import the site stylesheet — it is served directly by
+        the host when no route matches, outside the Astro build. So the tokens
+        below are a hand-kept copy of the ones in src/styles/global.css. They
+        must be updated together; the values are duplicated, the system is not.
+        Everything here — the two faces, the ink ramp, the 52px button with its
+        arrow, the 2px radius — is the same system the rest of the site uses.
+      */
+      @font-face {
+        font-family: "Manrope";
+        src: url("/fonts/manrope-latin-variable.woff2") format("woff2-variations");
+        font-weight: 200 800;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("/fonts/inter-latin-variable.woff2") format("woff2-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        --bc-page: #ffffff;
+        --bc-ink: #1b1917;
+        --bc-ink-secondary: #3d3833;
+        --bc-accent: #8a6520;
+        --bc-accent-solid: #c39a53;
+        --bc-accent-solid-hover: #b5883b;
+        --bc-accent-deco: #c39a53;
+        --bc-accent-wash: rgb(195 154 83 / 0.14);
+        --bc-border-strong: rgb(56 56 56 / 0.22);
+        --radius-sm: 2px;
+        --transition-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        background: var(--bc-page);
+        color: var(--bc-ink-secondary);
+        font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        max-width: 34rem;
+      }
+
+
+      .code {
+        font-family: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+        font-size: clamp(4.5rem, 15vw, 9rem);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        color: var(--bc-ink);
+        margin: 0;
+      }
+      .code span {
+        color: var(--bc-accent-deco);
+      }
+
+      h1 {
+        font-family: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+        font-size: clamp(1.5rem, 4vw, 2.25rem);
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.022em;
+        color: var(--bc-ink);
+        margin: 1.5rem 0 1rem;
+      }
+
+      p.lead {
+        margin: 0 auto 2rem;
+        color: var(--bc-ink-secondary);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+
+      /* Identical geometry to .bc-btn: 52px tall, 2px radius, 15px/600, arrow
+         on the right, same 140ms transition. */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 3.25rem;
+        padding-inline: 1.5rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1;
+        text-decoration: none;
+        transition:
+          background-color var(--transition-fast),
+          border-color var(--transition-fast),
+          color var(--transition-fast);
+      }
+      .btn svg {
+        width: 1rem;
+        height: 1rem;
+        flex: none;
+        transition: transform var(--transition-fast);
+      }
+      .btn:hover svg {
+        transform: translateX(2px);
+      }
+
+      .primary {
+        background: var(--bc-accent-solid);
+        color: #1b1917; /* 6.73:1 on the brand gold; white would be 2.60:1 */
+      }
+      .primary:hover {
+        background: var(--bc-accent-solid-hover);
+      }
+
+      .secondary {
+        border-color: var(--bc-border-strong);
+        color: var(--bc-ink);
+      }
+      .secondary:hover {
+        border-color: var(--bc-accent-solid);
+        background: var(--bc-accent-wash);
+      }
+
+      a:focus-visible {
+        outline: 3px solid var(--bc-accent);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="code">4<span>0</span>4</p>
+      <h1>Diese Seite gibt es nicht</h1>
+      <p class="lead">
+        Der Link ist möglicherweise veraltet oder enthält einen Tippfehler. Über die Startseite
+        finden Sie alle Leistungen rund um Immobilienbewertung, Bauschadenbewertung und
+        Modernisierung.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="/">
+          Zur Startseite
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M5 12h14" /><path d="M13 6l6 6-6 6" />
+          </svg>
+        </a>
+        <a class="btn secondary" href="/kontakt/">
+          Kontakt aufnehmen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M5 12h14" /><path d="M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+    </main>
+  </body>
+</html>

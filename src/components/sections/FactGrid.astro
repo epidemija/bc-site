@@ -1,0 +1,192 @@
+---
+/**
+ * Compact fact grid.
+ *
+ * Four related lists — "when is it worth it", "what are the benefits", "what is
+ * the goal", "why us" — printed one under another turn into a page of scrolling
+ * bullets that nobody reads. Here they sit as cards on one dense grid: each
+ * card is a small, self-contained block with an icon, a heading and a tight
+ * list, and the whole set is visible at once.
+ *
+ * WHY NOT TABS OR AN ACCORDION: this content is exactly what a visitor is
+ * scanning for and exactly what a search engine should index. Both patterns
+ * would hide three quarters of it behind a click for no gain in this amount of
+ * text.
+ *
+ * Each card is a real <h3> plus a real <ul>. The grid is presentation only, so
+ * the reading order without CSS is still heading, list, heading, list.
+ *
+ * COLUMN COUNT: three cards get a real three-column row (nothing left
+ * stranded alone on its own line); two or four cards keep the two-column
+ * grid, where four settles into two even rows and two is one row. `wide` is
+ * still there for a genuinely uneven set (e.g. three cards where one list is
+ * much longer than the other two) but is not needed just to close a gap —
+ * the column count already does that.
+ *
+ * A three-card row used to cap at 62rem and centre, to avoid reading as three
+ * cards padding out the full section width. In practice, on pages where the
+ * lists run long (Immobilienbewertung, Bauschadensbewertung, Aufmaß), that cap
+ * squeezed each card enough to wrap awkwardly and look cramped. Three real
+ * columns already close the "nothing orphaned" gap on their own, so the row
+ * now uses the section's full width like every other column count.
+ */
+import Icon from "../ui/Icon.astro";
+
+export interface FactCard {
+  title: string;
+  icon: "check" | "trend" | "target" | "award" | "analysis" | "document";
+  items: string[];
+  /** Makes a card span both columns of a two-column grid. Has no effect when
+   * there are exactly three cards — that case already gets one row of three. */
+  wide?: boolean;
+}
+
+interface Props {
+  cards: FactCard[];
+  /** Heading level inside each card. h3 by default, under a section's h2. */
+  headingLevel?: "h3" | "h4";
+  class?: string;
+}
+
+const { cards, headingLevel: H = "h3", class: className = "" } = Astro.props;
+const columns = cards.length === 3 ? 3 : 2;
+---
+
+<ul
+  class={`fact-grid ${className}`}
+  style={`--fact-grid-cols:${columns}`}
+>
+  {
+    cards.map((card, i) => (
+      <li
+        class={`fact-card reveal-on-scroll${card.wide && columns === 2 ? " fact-card--wide" : ""}`}
+        data-reveal
+        style={`transition-delay:${i * 90}ms`}
+      >
+        <span class="fact-card__icon" aria-hidden="true">
+          <Icon name={card.icon} class="h-5 w-5" />
+        </span>
+        <H class="fact-card__title">{card.title}</H>
+        <ul class="fact-card__list">
+          {card.items.map((item) => (
+            <li>
+              <Icon name="check-circle" class="fact-card__bullet" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .fact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .fact-grid {
+      grid-template-columns: repeat(var(--fact-grid-cols, 2), minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+    .fact-card--wide {
+      grid-column: span 2;
+    }
+    /* Full width with one column of bullets reads as a half-empty card. */
+    .fact-card--wide .fact-card__list {
+      display: block;
+      columns: 2;
+      column-gap: 2.5rem;
+    }
+    .fact-card--wide .fact-card__list li {
+      break-inside: avoid;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  /* Same treatment as .bc-card: hairline border, 2px radius, token padding.
+     The card used to lift 2px and cast a 28px shadow on hover — restrained
+     depth is the house style, so the border tightens instead. Nothing moves. */
+  .fact-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-xl);
+    border: 1px solid var(--bc-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--bc-surface);
+    transition:
+      border-color var(--transition-normal),
+      background-color var(--transition-normal);
+  }
+  @media (min-width: 1024px) {
+    .fact-card {
+      padding: var(--space-xl) var(--space-2xl);
+    }
+  }
+  .fact-card:hover {
+    border-color: var(--bc-border-strong);
+  }
+
+  .fact-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-sm);
+    color: var(--bc-accent-deco);
+    background-color: color-mix(in srgb, var(--bc-accent-deco) 13%, var(--bc-page));
+    border: 1px solid color-mix(in srgb, var(--bc-accent-deco) 32%, transparent);
+  }
+
+  .fact-card__title {
+    margin: 0;
+    font-family: var(--font-display, inherit);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--bc-ink);
+  }
+
+  .fact-card__list {
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fact-card__list li {
+    display: flex;
+    gap: 0.625rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--bc-muted);
+  }
+  /* Fixed size and flex:none — without this a bullet compresses unevenly
+     next to a multi-line item's wrapped text, so icons end up visibly
+     different sizes down the same list. That was a genuine bug, not just a
+     visual preference. */
+  .fact-card :global(.fact-card__bullet) {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.1875rem;
+    color: var(--bc-accent-deco);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fact-card,
+    .fact-card:hover {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>

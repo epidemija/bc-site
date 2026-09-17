@@ -1,0 +1,187 @@
+---
+/**
+ * Digitale Grundrisse — service page, second level.
+ *
+ * Two cards only here, which fills the grid's two columns exactly, so nothing
+ * is set wide.
+ *
+ * The process is its own ABLAUF_GRUNDRISSE (close to ABLAUF_UNTERLAGEN,
+ * Aufmaß's process, but worded for this page specifically): for the office
+ * these are one job in two stages, and this page links back to Aufmaß in the
+ * copy rather than repeating it.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import FloorPlanLines from "../../../components/ui/FloorPlanLines.astro";
+import FloorPlanScan from "../../../components/sections/FloorPlanScan.astro";
+import StatementImageBand from "../../../components/sections/StatementImageBand.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_GRUNDRISSE } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-digitale-grundrisse.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.digitaleGrundrisse;
+
+/* ------------------------------------------------------------- content */
+
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann werden digitale Grundrisse benötigt?",
+    items: [
+      "beim Verkauf oder der Vermietung einer Immobilie",
+      "für Exposés und Vermarktungsunterlagen",
+      "bei fehlenden oder veralteten Grundrissen",
+      "für Finanzierungsunterlagen",
+      "für Immobilienbewertungen",
+      "zur Planung von Umbauten und Modernisierungen",
+      "als Grundlage für Architekten und weitere Fachplaner",
+    ],
+  },
+  {
+    icon: "document",
+    title: "Was Sie erhalten",
+    items: [
+      "Aktuelle digitale Grundrisse",
+      "Bemaßte Grundrisse",
+      "Übersichtliche Raumaufteilung",
+      "Maßstab in der Regel 1:100",
+      "Auf Wunsch zusätzlich als CAD-/DWG-Datei",
+      "Grundlage für Ihr Vorhaben",
+    ],
+  },
+];
+
+const steps = ABLAUF_GRUNDRISSE;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("digitale-grundrisse")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Digitale Grundrisse",
+      description:
+        "Maßstabsgetreue, bemaßte digitale Grundrisse aus Aufmaß oder Bestandsunterlagen als " +
+        "Grundlage für Vermarktung, Planung und Abstimmung.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf bei digitalen Grundrissen",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="digitaleGrundrisse" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Digitale Grundrisse"
+    subtitle="Maßstabsgetreue Darstellung"
+    image={heroImage}
+    imageAlt="Digitaler, bemaßter Grundriss einer Wohnung auf einem Tablet"
+  />
+
+  <Breadcrumbs page="digitaleGrundrisse" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Ein Plan, den alle Beteiligten lesen können
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Digitale, bemaßte Grundrisse ermöglichen eine klare und präzise Darstellung Ihrer
+          Immobilie. Sie dienen als verlässliche Grundlage für Vermarktung, Planung und Abstimmung
+          – nachvollziehbar, maßgenau und auf dem aktuellen Stand. Sie eignen sich für Verkauf und
+          Vermietung, Finanzierung oder als Grundlage für weitere Planungen.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Grundlage ist entweder ein <a
+            href={routes.aufmass}
+            class="font-medium text-ink underline decoration-[color:var(--bc-accent)] decoration-2 underline-offset-4 transition-colors hover:text-accent"
+            >Aufmaß vor Ort</a
+          > oder vorhandene Bestandsunterlagen, sofern diese noch dem tatsächlichen Gebäude
+          entsprechen. Ändert sich später etwas am Objekt, lässt sich der Grundriss anpassen,
+          statt ihn neu erstellen zu müssen.
+        </p>
+      </div>
+
+      <div class="reveal-on-scroll" data-reveal style="transition-delay:150ms">
+        <FloorPlanScan />
+        <p class="mt-6 text-center text-[13px] leading-relaxed text-muted">
+          Vom Aufmaß vor Ort zum maßstabsgetreuen digitalen Grundriss — mit präzisen
+          Flächenangaben nach WoFlV und DIN 277.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Statement: Aufmaß or existing plans? ----------------
+      Same reusable dark band as on Aufmaß (StatementImageBand), heading and
+      text supplied by the client. */}
+  <StatementImageBand
+    heading="Vorhandene Pläne oder neues Aufmaß?"
+    headingId="plaene-oder-aufmass-titel"
+    text={[
+      "Nicht für jeden neuen Grundriss muss die Immobilie neu aufgemessen werden. Liegen aktuelle und vollständige Bestandsunterlagen vor, können diese häufig als Grundlage für die Erstellung eines digitalen Grundrisses verwendet werden.",
+      "Gerade bei älteren Immobilien stimmen vorhandene Pläne jedoch nicht immer mit dem heutigen Bestand überein. Umbauten wurden nicht nachgetragen, Maße fehlen oder die Unterlagen sind nicht mehr ausreichend lesbar. Auch für Verkauf, Finanzierung oder weitere Planungen können ältere Grundrisse je nach Verwendungszweck zu Rückfragen führen.",
+      "In diesem Fall empfehlen wir ein Vor-Ort-Aufmaß. So wird der tatsächliche Bestand erfasst und der neue Grundriss auf Grundlage des heutigen Zustands erstellt.",
+    ]}
+    primaryCta={{ label: "Aufmaß anfragen", href: routes.aufmass }}
+    secondaryCta={{ label: "Unverbindlich anfragen", href: routes.kontakt }}
+  />
+
+  {/* ---------------- The lists, compacted ----------------
+      No visible eyebrow/heading — the cards need no section title above
+      them; kept as a screen-reader-only heading so the section still has a
+      real accessible name. No border: the wash fades to the page colour
+      over a fixed 96px at top and bottom, same treatment as ProcessSteps'
+      band below it — a soft transition instead of a hard-edged panel. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <FloorPlanLines />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass und Vorgehen auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="digitale-grundrisse" eyebrow="" />
+
+  <ClosingCta heading="Sie brauchen einen aktuellen Grundriss?" text="Sagen Sie uns, wofür Sie den Grundriss brauchen und ob Bestandsunterlagen vorliegen. Wir klären, ob ein Aufmaß vor Ort nötig ist, und machen Ihnen ein passendes Angebot." buttonHref={routes.kontakt} />
+</BaseLayout>

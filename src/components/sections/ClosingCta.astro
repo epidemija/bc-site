@@ -1,0 +1,54 @@
+---
+/**
+ * The closing call-to-action band repeated at the bottom of (almost) every
+ * page — was eleven hand-rolled copies of the same three elements, each
+ * left-aligned with no background. One shared, centered panel, full
+ * container width (matches FaqSection's outer measure, not narrowed):
+ * light top-to-bottom gradient (--bc-surface-subtle to --bc-surface) is the
+ * only edge — no border — heading + copy + one Button, all centered.
+ *
+ * The radial layer is the same "gold bloom" already used on the three
+ * category hero sections (AnimatedPageHero's .hero-glow, built from
+ * --bc-accent-wash-strong) — reused here at the gentler --bc-accent-wash
+ * strength, since this sits on a light card rather than a dark photo.
+ */
+import Button from "../ui/Button.astro";
+
+interface Props {
+  heading: string;
+  text: string;
+  buttonHref: string;
+  buttonLabel?: string;
+}
+
+const { heading, text, buttonHref, buttonLabel = "Ihre Anfrage" } = Astro.props;
+---
+
+{
+  /* This is the last section on the page, directly above the footer — the
+     symmetric bc-section rhythm otherwise stacks with the footer's own top
+     padding into a big gap. The pb override below is an inline style, not
+     a pb-* utility class: .bc-section is deliberately unlayered CSS (see
+     global.css §4 "Layout rhythm") so it always beats a Tailwind utility
+     regardless of source order; only an inline style can override just the
+     bottom half of its padding-block. */
+}
+<section
+  class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+  aria-labelledby="cta-titel"
+  style="padding-bottom: clamp(2.5rem, 5vw, 4rem)"
+>
+  <div
+    class="reveal-on-scroll flex w-full flex-col items-center rounded-sm px-6 py-12 text-center sm:px-12 sm:py-14 lg:py-16"
+    style="background-image: radial-gradient(55% 70% at 88% 8%, var(--bc-accent-wash), transparent 70%), linear-gradient(180deg, var(--bc-surface-subtle), var(--bc-surface))"
+    data-reveal
+  >
+    <h2 id="cta-titel" class="font-display text-2xl text-ink sm:text-3xl lg:text-[34px]">
+      {heading}
+    </h2>
+    <p class="mt-5 max-w-xl text-base leading-relaxed text-muted">
+      {text}
+    </p>
+    <Button href={buttonHref} class="mt-8">{buttonLabel}</Button>
+  </div>
+</section>

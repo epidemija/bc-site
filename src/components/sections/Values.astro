@@ -1,0 +1,87 @@
+---
+/**
+ * Four reasons, spelled out — replaces the logo banner that used to sit
+ * between the trust section and the footer.
+ *
+ * Icon, title, one sentence: the same shape as the trust row in the hero,
+ * given room to explain itself. Hairlines between the columns rather than
+ * cards, per the design system — depth comes from a rule, not a shadow.
+ *
+ * The rule sits on the left edge of every item that is not first in its row,
+ * and the row changes with the breakpoint: one column on a phone (no rules),
+ * two from sm (rule on the odd items), four from lg (rule on all but the
+ * first). That is why the border classes are computed per item instead of
+ * written once — a single `sm:border-l` would leave a stray rule hanging at
+ * the start of the second row.
+ *
+ * No visible section heading: the four titles are the content. The <h2> is
+ * screen-reader-only so the section keeps a real accessible name and the
+ * outline stays intact between the page <h1> and these <h3>s.
+ */
+import Icon from "../ui/Icon.astro";
+
+const werte: { icon: "shield" | "helmet" | "user" | "pin"; title: string; text: string }[] = [
+  {
+    icon: "shield",
+    title: "Unabhängig & objektiv",
+    text: "Unsere Einschätzung richtet sich nach den tatsächlichen Gegebenheiten – nicht nach den Interessen Dritter.",
+  },
+  {
+    icon: "helmet",
+    title: "Fachlich & praxisnah",
+    text: "Als Bauingenieur verbinden wir technisches Fachwissen mit einem praxisnahen Blick auf die Immobilie.",
+  },
+  {
+    icon: "user",
+    title: "Persönlich & verständlich",
+    text: "Sie haben einen festen Ansprechpartner. Ergebnisse und Empfehlungen besprechen wir persönlich mit Ihnen.",
+  },
+  {
+    icon: "pin",
+    title: "Regional für Sie da",
+    text: "Von Speyer aus sind wir in der Vorderpfalz, der Metropolregion Rhein-Neckar und darüber hinaus für Sie unterwegs.",
+  },
+];
+
+const RULE = "border-[color:var(--bc-border)]";
+/** First in its row at that breakpoint → no rule. */
+const kante = (i: number) =>
+  i === 0
+    ? ""
+    : i % 2 === 1
+      ? `sm:border-l ${RULE} sm:pl-8 lg:pl-10`
+      : `lg:border-l ${RULE} lg:pl-10`;
+---
+
+{
+  /* The ClosingCta below brings its own bc-section top padding. Stacked with
+     this section's bottom padding that is two full rhythm steps of empty
+     space between the four columns and the CTA panel, so the bottom half is
+     dropped here and the gap is owned by the CTA alone. It has to be an
+     inline style: .bc-section is deliberately unlayered CSS (global.css §4)
+     and beats any pb-* utility regardless of source order — the same reason
+     ClosingCta overrides its own padding inline. */
+}
+<section
+  class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+  aria-labelledby="werte-titel"
+  style="padding-bottom: 0"
+>
+  <h2 id="werte-titel" class="sr-only">Warum BC IMMOWERT</h2>
+
+  <ul class="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-10">
+    {
+      werte.map((wert, i) => (
+        <li
+          class={`reveal-on-scroll ${kante(i)}`}
+          data-reveal
+          style={`transition-delay:${i * 90}ms`}
+        >
+          <Icon name={wert.icon} class="h-7 w-7 text-accent-deco" />
+          <h3 class="font-display mt-5 text-lg text-ink">{wert.title}</h3>
+          <p class="mt-3 text-[15px] leading-relaxed text-muted">{wert.text}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

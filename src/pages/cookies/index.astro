@@ -1,0 +1,177 @@
+---
+/**
+ * Cookie-Einstellungen — a standalone reference page for what this site
+ * actually stores in the visitor's browser and which external services are
+ * gated behind consent, plus a durable, always-reachable way to revisit
+ * that choice. The floating banner (ConsentBanner.astro) only ever shows
+ * itself once per decision; this page is the "I changed my mind" path.
+ *
+ * The storage table and the "Externe Dienste" section both read
+ * PUBLIC_GA4_MEASUREMENT_ID directly, same as BaseLayout and the
+ * Datenschutzerklärung §9/§10 — so this page can never claim Google
+ * Analytics is active while it is actually switched off, or the reverse.
+ *
+ * Not legal advice — a Fachanwalt should read this once before the domain
+ * is switched over.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+import Prose from "../../components/layout/Prose.astro";
+import LegalAccordionItem from "../../components/ui/LegalAccordionItem.astro";
+import Button from "../../components/ui/Button.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { legal, routes } from "../../config/site";
+
+const page = PAGES.cookies;
+const jsonLd = subpageSchema(page, []);
+const GA4_MEASUREMENT_ID = import.meta.env.PUBLIC_GA4_MEASUREMENT_ID;
+---
+
+<BaseLayout page="cookies" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Cookie-Einstellungen"
+    subtitle="Welche Speicherobjekte diese Website verwendet"
+    image={heroImage}
+    imageAlt="Speyerer Dom bei Sonnenuntergang – BC IMMOWERT, Speyer"
+  />
+
+  <Breadcrumbs page="cookies" />
+
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8">
+    <Prose wide>
+      <div class="bc-legal-static">
+        <p class="!mt-0">
+          Diese Website nutzt ausschließlich technisch notwendige Speicherobjekte sowie, zum Schutz
+          des Kontaktformulars vor Spam, Google reCAPTCHA. Externe Inhalte — Google Analytics sowie
+          die Kartendarstellungen von OpenStreetMap und Datawrapper — werden erst geladen, nachdem
+          Sie einmal zugestimmt haben. Sie können Ihre Auswahl jederzeit anpassen oder widerrufen.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <Button type="button" variant="primary" data-cookie-reopen>Einstellungen anpassen</Button>
+          <Button type="button" variant="ghost" data-cookie-revoke>Einwilligung widerrufen</Button>
+        </div>
+      </div>
+
+      <div class="bc-legal-grid !mt-10" data-legal-accordion>
+        <LegalAccordionItem title="1. Was sind Cookies?" open>
+          <p>
+            Cookies sind kleine Textdateien, die Ihr Browser beim Besuch einer Website speichert.
+            Vergleichbar damit nutzen Websites auch den sogenannten LocalStorage Ihres Browsers, um
+            Einstellungen lokal auf Ihrem Gerät zu speichern. Diese Website setzt keine klassischen
+            Cookies, sondern ausschließlich LocalStorage-Einträge sowie, für den Formularschutz, die
+            Mechanismen von Google reCAPTCHA.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="2. Übersicht der eingesetzten Speicherobjekte" open>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[560px] border-collapse text-left text-sm">
+              <thead>
+                <tr>
+                  <th scope="col" class="border-b border-[color:var(--bc-border)] py-2 pr-4 font-medium text-secondary">
+                    Name
+                  </th>
+                  <th scope="col" class="border-b border-[color:var(--bc-border)] py-2 pr-4 font-medium text-secondary">
+                    Anbieter
+                  </th>
+                  <th scope="col" class="border-b border-[color:var(--bc-border)] py-2 pr-4 font-medium text-secondary">
+                    Zweck
+                  </th>
+                  <th scope="col" class="border-b border-[color:var(--bc-border)] py-2 pr-4 font-medium text-secondary">
+                    Speicherdauer
+                  </th>
+                  <th scope="col" class="border-b border-[color:var(--bc-border)] py-2 font-medium text-secondary">
+                    Typ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4"><code>bc-theme</code></td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">bc-immowert.de</td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">
+                    Speichert Ihre Wahl zwischen heller und dunkler Darstellung
+                  </td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">Dauerhaft (LocalStorage)</td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3">Notwendig</td>
+                </tr>
+                <tr>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4"><code>bc-consent-external</code></td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">bc-immowert.de</td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">Speichert Ihre Cookie-Entscheidung</td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3 pr-4">Dauerhaft (LocalStorage)</td>
+                  <td class="border-b border-[color:var(--bc-border)] py-3">Notwendig</td>
+                </tr>
+                {
+                  GA4_MEASUREMENT_ID && (
+                    <tr>
+                      <td class="py-3 pr-4">
+                        <code>_ga</code>, <code>_ga_*</code>
+                      </td>
+                      <td class="py-3 pr-4">{legal.analytics.name}</td>
+                      <td class="py-3 pr-4">Reichweitenmessung (Google Analytics)</td>
+                      <td class="py-3 pr-4">bis zu 14 Monate</td>
+                      <td class="py-3">Nur mit Einwilligung</td>
+                    </tr>
+                  )
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="!mt-4 text-sm">
+            Darüber hinaus setzt Google reCAPTCHA beim Aufruf der Kontaktseite eigene Speicherobjekte,
+            deren genaue Bezeichnung und Speicherdauer Google nicht im Detail offenlegt.{" "}
+            {
+              GA4_MEASUREMENT_ID
+                ? "Über die genannten Einträge hinaus werden keine Analyse- oder Marketing-Cookies eingesetzt."
+                : "Google Analytics ist derzeit nicht aktiv; es werden keine Analyse- oder Marketing-Cookies eingesetzt."
+            }{" "}
+            Es findet keine Profilbildung statt.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="3. Externe Dienste" open>
+          <p>
+            <strong>Google reCAPTCHA</strong> ({legal.recaptcha.name}) — schützt das Kontaktformular
+            automatisiert vor Spam und Missbrauch. Lädt beim Aufruf der Kontaktseite, unabhängig von
+            Ihrer Cookie-Entscheidung. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1
+            lit. f DSGVO).
+          </p>
+          <p>
+            <strong>Google Analytics</strong> ({legal.analytics.name}) —{" "}
+            {
+              GA4_MEASUREMENT_ID
+                ? "wird ausschließlich nach Ihrer ausdrücklichen Einwilligung geladen."
+                : "ist derzeit nicht aktiviert und lädt in keinem Fall."
+            }
+          </p>
+          <p>
+            <strong>OpenStreetMap</strong> (OpenStreetMap Foundation) auf der Seite{" "}
+            <a href={routes.kontakt}>Kontakt</a> und <strong>Datawrapper</strong> ({legal.datawrapper.name})
+            für die Einsatzgebiet-Karte laden automatisch, sobald Sie der Einbindung externer Inhalte
+            zustimmen — über die Schaltflächen oben, über das Banner oder direkt über die
+            Schaltfläche „Karte laden" auf der jeweiligen Seite. Ohne Zustimmung findet beim Aufruf
+            der Seite keine Verbindung zu diesen Anbietern statt.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="4. Ihre Einwilligung verwalten" open>
+          <p>
+            Über die Schaltflächen oben können Sie Ihre Entscheidung zu Google Analytics, den
+            Kartendarstellungen und weiteren externen Inhalten jederzeit erneut treffen oder
+            widerrufen; ein Widerruf wirkt sofort und für die Zukunft. Weitere Informationen zu den
+            einzelnen Diensten finden Sie in unserer{" "}
+            <a href={`${routes.datenschutz}#externe-inhalte`}>Datenschutzerklärung</a>.
+          </p>
+        </LegalAccordionItem>
+      </div>
+
+      <div class="bc-legal-static !mt-10">
+        <p class="!mt-0 text-sm">Stand: {legal.lastUpdated.split("-").reverse().join(".")}</p>
+      </div>
+    </Prose>
+  </section>
+</BaseLayout>

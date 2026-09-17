@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-server/
+.astro/
+
+# Environment files — must never be committed. .env.example is the template.
+.env
+.env.*
+!.env.example
+
+# Source maps, if ever generated locally
+*.map
+
+# Logs and diagnostics
+*.log
+npm-debug.log*
+logs/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Backups, dumps and archives — never publish these from the web root.
+# archive/ holds retired components, old drafts and deploy backups kept on
+# disk for reference; it is intentionally never pushed to GitHub.
+*.bak
+*.backup
+*.sql
+*.dump
+*.zip
+*.tar
+*.tar.gz
+archive/
+
+# Local scratch
+.cache/
+tmp/
+
+# Auto-created by the Claude desktop app in every connected folder to hold
+# files delivered via SendUserFile — not project source, never for GitHub.
+Claude outputs/
+
+# Contact-form secrets (RECAPTCHA_SECRET_KEY, RESEND_API_KEY, ...) for
+# api/kontakt.php. The real values never belong in the repo or in the zip
+# that goes to public_html — they live in api-geheim/kontakt-geheim.php,
+# uploaded once by hand to the server OUTSIDE public_html (see
+# api-geheim/kontakt-geheim.example.php). .example stays tracked as the
+# template; the filled-in file stays local only.
+api-geheim/kontakt-geheim.php

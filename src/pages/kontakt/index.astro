@@ -1,0 +1,147 @@
+---
+/**
+ * Kontakt — form card on one side, support links on the other.
+ *
+ * Structure follows Preline's "contact page with form card and support links":
+ * a centred heading over a `lg:grid-cols-2` grid in a `max-w-2xl lg:max-w-5xl`
+ * column, the card on the left, and exactly four divided rows on the right,
+ * each an outline icon plus title, description and a trailing link that ends in
+ * a small filled arrow.
+ *
+ * The copy is this office's, not the source's: "Knowledgebase", "Developer
+ * APIs" and "Contact sales" describe a SaaS product. What a caller here
+ * actually needs is the phone number, help choosing a service, a list of the
+ * documents to have ready, and an e-mail address — four rows, same shape.
+ *
+ * The hero uses the homepage photograph, so arriving here from any page feels
+ * like the same building.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import ContactForm from "../../components/sections/ContactForm.astro";
+import MapEmbed from "../../components/sections/MapEmbed.astro";
+import Icon from "../../components/ui/Icon.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { ORGANISATION as site, routes } from "../../config/site";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+
+const page = PAGES.kontakt;
+const jsonLd = subpageSchema(page, []);
+const { address, openingHours } = site;
+
+/** The support rows: phone, email, prep checklist. */
+const supportRows = [
+  {
+    icon: "phone",
+    title: "Rufen Sie uns an",
+    text: "Wir sind telefonisch unter der unten angegeben Nummer für Sie da.",
+    linkLabel: site.phone,
+    href: `tel:${site.phoneE164}`,
+  },
+  {
+    icon: "document",
+    title: "Schreiben Sie uns eine Mail",
+    text: "Schicken Sie uns ihre Anfrage per Mail. Nach Bearbeitung der Mail melden wir uns mit den nächsten Schritten bei ihnen.",
+    linkLabel: site.email,
+    href: `mailto:${site.email}`,
+  },
+  {
+    icon: "draft",
+    title: "Unterlagen vorbereiten",
+    text: "Mit unseren Checklisten können Sie die Unterlagen für Ihr persönliches Anliegen vorbereiten.",
+    linkLabel: "Checklisten",
+    href: routes.immobilienbewertung,
+  },
+];
+---
+
+<BaseLayout page="kontakt" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Kontakt"
+    subtitle="Ihre Anfrage"
+    image={heroImage}
+    imageAlt="Wohngebäude im Bestand – BC IMMOWERT, Speyer"
+  />
+
+  <Breadcrumbs page="kontakt" />
+
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8" aria-labelledby="kontakt-titel">
+    <div class="mx-auto max-w-2xl lg:max-w-5xl">
+      {/* ---------------- Centred heading ---------------- */}
+      <div class="mx-auto mb-10 max-w-2xl text-center lg:mb-14">
+        <h2
+          id="kontakt-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Ihr Anliegen in guten Händen
+        </h2>
+        <p class="reveal-on-scroll mt-4 text-base leading-relaxed text-muted" data-reveal>
+          Nach Prüfung Ihrer Anfrage melden wir uns persönlich bei Ihnen und besprechen gemeinsam die nächsten Schritte.
+        </p>
+      </div>
+
+      <div class="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+        {/* ---------------- Form card ---------------- */}
+        <ContactForm />
+
+        {/* ---------------- Support rows ---------------- */}
+        <div class="divide-y divide-[color:var(--bc-border)]">
+          {
+            supportRows.map((row) => (
+              <div class="flex gap-x-5 py-6">
+                <span class="mt-0.5 size-6 shrink-0 text-accent">
+                  <Icon name={row.icon} />
+                </span>
+                <div class="grow">
+                  <h3 class="text-[15px] text-ink">{row.title}</h3>
+                  <p class="mt-1 text-sm leading-relaxed text-muted">{row.text}</p>
+                  <a
+                    class="mt-2 inline-flex items-center gap-x-1.5 text-sm font-medium text-accent underline decoration-[color:var(--bc-accent)]/40 decoration-2 underline-offset-4 transition hover:decoration-[color:var(--bc-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+                    href={row.href}
+                  >
+                    {row.linkLabel}
+                    <svg
+                      class="size-2.5 shrink-0"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      {/* Filled arrow, as in the source — not the outline chevron used in the nav. */}
+                      <path d="M5.5 2.5 11 8l-5.5 5.5z" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            ))
+          }
+
+          {/*
+            Office address closes the column. Same icon + title + text shape as
+            the rows above, but no trailing link — the map below is the link.
+          */}
+          <div class="flex gap-x-5 py-6">
+            <span class="mt-0.5 size-6 shrink-0 text-accent">
+              <Icon name="building" />
+            </span>
+            <div class="grow">
+              <h3 class="text-[15px] text-ink">Standort</h3>
+              <p class="mt-1 text-sm leading-relaxed text-muted">
+                {address.street}, {address.postalCode} {address.city}
+              </p>
+              <p class="text-sm leading-relaxed text-muted">
+                {openingHours.label}
+                <span class="bc-divider" aria-hidden="true" />
+                Termine nach Vereinbarung
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <MapEmbed />
+</BaseLayout>

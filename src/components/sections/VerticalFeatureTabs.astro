@@ -1,0 +1,129 @@
+---
+/**
+ * Vertical feature tabs with an overlapping panel.
+ *
+ * Adapted from Preline's "vertical feature tabs with overlapping panel"
+ * block (marketing/content-navigation) — the same departures as
+ * Accordion.astro from its own Preline source, for the same reasons:
+ *
+ * - No Preline runtime. The exclusive-open behaviour is a dozen lines in
+ *   site.js (see the vtabs section there), not a third-party tabs library.
+ * - Radius from this project's scale (--radius-md, 4px), not the source's
+ *   12px.
+ * - Structure from a hairline border, not a shadow — same as every other
+ *   card on the site.
+ * - The source panel is a single stock photo per tab. There is no
+ *   photography for this section yet, and inventing stock imagery would be
+ *   worse than doing without, so the panel holds the client's own paragraph
+ *   copy instead — the visual identity (tab list beside an overlapping
+ *   panel) carries over, the content stays real.
+ *
+ * Progressive enhancement follows the accordion's pattern too: the open tab
+ * is a server-rendered data-open attribute, and .no-js shows every panel.
+ */
+import Icon from "../ui/Icon.astro";
+
+interface Tab {
+  icon:
+    | "arrow-left"
+    | "arrow-right"
+    | "arrow-dr"
+    | "phone"
+    | "mail"
+    | "document"
+    | "building"
+    | "analysis"
+    | "report"
+    | "check"
+    | "check-circle"
+    | "target"
+    | "trend"
+    | "award"
+    | "draft"
+    | "helmet";
+  title: string;
+  paragraphs: string[];
+}
+
+interface Props {
+  heading: string;
+  headingId: string;
+  /** Unique prefix for the id pairs tying each tab to its panel. */
+  idPrefix: string;
+  tabs: Tab[];
+  /** Index of the tab open on load. */
+  defaultOpen?: number;
+}
+
+const { heading, headingId, idPrefix, tabs, defaultOpen = 0 } = Astro.props;
+---
+
+<div class="bc-vtabs" data-vtabs>
+  <div class="bc-vtabs__backdrop" aria-hidden="true"></div>
+
+  <div class="bc-vtabs__grid">
+    <div class="bc-vtabs__intro">
+      <h2 id={headingId} class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]" data-reveal>
+        {heading}
+      </h2>
+
+      <div class="bc-vtabs__nav" role="tablist" aria-orientation="vertical">
+        {
+          tabs.map((tab, i) => (
+            <button
+              type="button"
+              class="bc-vtabs__tab reveal-on-scroll"
+              id={`${idPrefix}-tab-${i}`}
+              role="tab"
+              aria-selected={i === defaultOpen ? "true" : "false"}
+              aria-controls={`${idPrefix}-panel-${i}`}
+              data-vtabs-tab
+              data-open={i === defaultOpen ? "" : null}
+              data-reveal
+              style={`transition-delay:${i * 100}ms`}
+            >
+              <Icon name={tab.icon} class="bc-vtabs__icon" />
+              <span class="bc-vtabs__title">{tab.title}</span>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="bc-vtabs__panels reveal-on-scroll" data-reveal style="transition-delay:150ms">
+      {
+        tabs.map((tab, i) => (
+          <div
+            class="bc-vtabs__panel"
+            id={`${idPrefix}-panel-${i}`}
+            role="tabpanel"
+            aria-labelledby={`${idPrefix}-tab-${i}`}
+            data-vtabs-panel
+            data-open={i === defaultOpen ? "" : null}
+          >
+            {tab.paragraphs.map((p) => (
+              <p>{p}</p>
+            ))}
+          </div>
+        ))
+      }
+
+      {/* Decorative mark: a ruler edge with graduation marks (a scale bar,
+          angled like a tape measure laid across the corner) — measurement
+          instead of the source's plain squiggle. Drawn at this project's
+          usual icon weight (2.5, round joins) rather than the source's
+          thick brush strokes, so it reads as a fine instrument mark, not a
+          blob. */}
+      <svg class="bc-vtabs__mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <g transform="rotate(-40 32 32)" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 40H56" />
+          <path d="M8 40V24" />
+          <path d="M20 40V32" />
+          <path d="M32 40V28" />
+          <path d="M44 40V32" />
+          <path d="M56 40V24" />
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>

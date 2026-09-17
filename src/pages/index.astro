@@ -1,0 +1,69 @@
+---
+/**
+ * Homepage — and the reference implementation every subpage copies.
+ *
+ * A page file does three things and nothing more: pick its key from the page
+ * registry, assemble its structured data, and compose sections. All metadata
+ * comes from src/config/pages.ts via BaseLayout.
+ */
+import { getImage } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/sections/Hero.astro";
+import ServicesSlider from "../components/sections/ServicesSlider.astro";
+import TrustSection from "../components/sections/TrustSection.astro";
+import Values from "../components/sections/Values.astro";
+import ClosingCta from "../components/sections/ClosingCta.astro";
+import { PAGES } from "../config/pages";
+import { routes } from "../config/site";
+import { SERVICE_ENTRIES } from "../config/services";
+import { homepageSchema } from "../seo/schema";
+import heroImage from "../assets/images/hero-bc-immowert-startseite.jpg";
+
+const jsonLd = homepageSchema(PAGES.home, SERVICE_ENTRIES);
+
+// Preload descriptor for the LCP image. Widths, format and quality are kept
+// in lockstep with Hero.astro's <Picture avif> source (960/1440/1780, avif,
+// quality 92) so the browser downloads byte-identical files either way. The
+// two calls still get separate Astro asset hashes (Picture.astro resolves
+// its own src internally before calling getImage(), so this call can never
+// produce the exact same output filename) — harmless in practice since the
+// bytes match, but it does mean devtools can still show a one-time "was
+// preloaded but not used" notice for this image. If that ever needs to go
+// away for good, the fix is having Hero.astro render its own <picture>
+// markup so both places share one getImage() call, not a second attempt at
+// matching arguments here.
+const HERO_WIDTHS = [960, 1440, 1780];
+const heroAvif = await getImage({
+  src: heroImage,
+  format: "avif",
+  widths: HERO_WIDTHS,
+  quality: 92,
+  sizes: "100vw",
+});
+const lcp = {
+  href: heroAvif.srcSet.values[0]?.url ?? heroAvif.src,
+  srcset: heroAvif.srcSet.attribute,
+  sizes: "100vw",
+  type: "image/avif",
+};
+---
+
+<BaseLayout page="home" jsonLd={jsonLd} headerVariant="overlay" lcp={lcp}>
+  <Hero />
+  <ServicesSlider />
+  <TrustSection />
+
+  {/* TrustSection is sticky (top-0, z-0) and stays pinned while everything
+      after it scrolls over the top of it. That only works if what follows is
+      opaque and sits in a higher layer — the logo banner carried its own
+      `relative z-40 bg-page` for exactly this reason. ClosingCta is shared
+      with every other page and has no such wrapper, so the layer lives here. */}
+  <div class="relative z-40 bg-page">
+    <Values />
+    <ClosingCta
+      heading="Sie haben ein Anliegen?"
+      text="Schildern Sie uns kurz Ihr Anliegen. Wir prüfen Ihre Anfrage und melden uns persönlich bei Ihnen, um die nächsten Schritte zu besprechen."
+      buttonHref={routes.kontakt}
+    />
+  </div>
+</BaseLayout>

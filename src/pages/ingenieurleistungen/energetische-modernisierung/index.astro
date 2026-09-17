@@ -1,0 +1,225 @@
+---
+/**
+ * Energetische Modernisierung — service page, second level.
+ *
+ * The four related lists the client supplied (when, benefits, goal, why us) are
+ * rendered as one compact grid rather than four stacked bullet columns — see
+ * FactGrid.astro for why. Everything stays visible text: no tabs, no accordion.
+ *
+ * Photographic header (individual service, §5d), one <h1>, an <h2> per section,
+ * a visible breadcrumb trail, metadata from src/config/pages.ts.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import FloorPlanLines from "../../../components/ui/FloorPlanLines.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_INGENIEUR } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-energetische-modernisierung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.energetischeModernisierung;
+
+/* ------------------------------------------------------------- content */
+
+/**
+ * The four lists, as cards. "Warum wir?" is wide because it carries six
+ * entries and would otherwise leave its neighbour half empty.
+ */
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann sind energetische Modernisierungen sinnvoll?",
+    items: [
+      "bei erhöhtem Energieverbrauch oder veralteter Gebäudetechnik",
+      "bei steigenden Energie- und Betriebskosten",
+      "bei geplanten Renovierungen oder Umbauten",
+      "zur Erfüllung gesetzlicher Anforderungen",
+      "zur Verbesserung des Wohnkomforts",
+    ],
+  },
+  {
+    icon: "trend",
+    title: "Vorteile energetischer Modernisierungen",
+    items: [
+      "Reduzierung der Energie- und Betriebskosten",
+      "Steigerung der Energieeffizienz",
+      "Erhöhung des Immobilienwertes",
+      "Verbesserung der Marktgängigkeit",
+      "Möglichkeit zur Nutzung von Fördermitteln",
+    ],
+  },
+  {
+    icon: "target",
+    title: "Ziel energetischer Modernisierungen",
+    items: [
+      "nachhaltige Senkung des Energieverbrauchs",
+      "wirtschaftlich sinnvolle Optimierung der Immobilie",
+      "Verbesserung des energetischen Zustands",
+      "Schaffung einer langfristig effizienten und zukunftssicheren Nutzung",
+    ],
+  },
+  {
+    icon: "award",
+    title: "Warum wir?",
+    items: [
+      "Erfahrung mit energetischen Modernisierungen im Bestand",
+      "Begleitung größerer Modernisierungsprojekte",
+      "Erfahrung mit Mehrfamilienhäusern und Wohnanlagen",
+      "Zusammenarbeit mit Energieberatern und weiteren Fachplanern",
+      "Netzwerk regionaler Fachfirmen",
+      "Technische und wirtschaftliche Betrachtung der Maßnahmen",
+    ],
+  },
+];
+
+/** How an energetische Modernisierung runs — specific to this page, not
+ * the shared ABLAUF_INGENIEUR, because a modernisation starts from the
+ * building's current state rather than a general Vorhaben. */
+const steps = [
+  {
+    icon: "phone",
+    title: "Erstgespräch",
+    text: "Wir besprechen Ihr Vorhaben, Ihre Ziele und die Ausgangssituation der Immobilie.",
+  },
+  {
+    icon: "document",
+    title: "Bestandsaufnahme",
+    text: "Wir prüfen vorhandene Unterlagen und besichtigen das Gebäude vor Ort, um den aktuellen Zustand und die technischen Rahmenbedingungen zu erfassen.",
+  },
+  {
+    icon: "analysis",
+    title: "Maßnahmenkonzept",
+    text: "Gemeinsam legen wir fest, welche energetischen Maßnahmen sinnvoll sind und ob diese einzeln, kombiniert oder schrittweise umgesetzt werden sollen.",
+  },
+  {
+    icon: "draft",
+    title: "Planung & Abstimmung",
+    text: "Wir planen die erforderlichen Maßnahmen und stimmen bei Bedarf Energieberater, Fachplaner und ausführende Unternehmen aufeinander ab.",
+  },
+  {
+    icon: "helmet",
+    title: "Begleitung der Umsetzung",
+    text: "Auf Wunsch begleiten wir die Arbeiten bis zur Fertigstellung und stehen Ihnen während der Umsetzung als technischer Ansprechpartner zur Seite.",
+  },
+] satisfies typeof ABLAUF_INGENIEUR;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("energetische-modernisierung")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Energetische Modernisierung",
+      description:
+        "Technische Beratung, Planung und Begleitung energetischer Modernisierungen an " +
+        "Bestandsimmobilien durch einen Bauingenieur — abgestimmt auf Gebäude, Anforderungen " +
+        "und Wirtschaftlichkeit.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf einer energetischen Modernisierung",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="energetischeModernisierung" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Energetische Modernisierung"
+    subtitle="Planung und Begleitung"
+    image={heroImage}
+    imageAlt="Fassade einer Bestandsimmobilie während der energetischen Modernisierung"
+  />
+
+  <Breadcrumbs page="energetischeModernisierung" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Bestand sinnvoll weiterentwickeln
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Bestandsimmobilien erfordern bei energetischen Modernisierungen eine fachlich fundierte
+          Planung und Koordination. Ziel ist es, bestehende Strukturen sinnvoll weiterzuentwickeln
+          und wirtschaftlich tragfähige Lösungen zu schaffen.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Die Leistungen umfassen die technische Beratung, Planung sowie die Begleitung von
+          Maßnahmen – abgestimmt auf die individuellen Anforderungen Ihres Vorhabens.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Fassade einer Bestandsimmobilie während der energetischen Modernisierung"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- The four lists, compacted ----------------
+      No visible eyebrow/heading — four self-explanatory cards need no
+      section title above them; kept as a screen-reader-only heading so the
+      section still has a real accessible name. No border: the wash fades to
+      the page colour over a fixed 96px at top and bottom, same treatment as
+      ProcessSteps' band below it — a soft transition instead of a
+      hard-edged panel. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <FloorPlanLines />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass, Nutzen und Ziel auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="energetische-modernisierung" eyebrow="" />
+
+  <ClosingCta heading="Erst rechnen, dann bauen" text="Ob sich eine Maßnahme lohnt, entscheidet sich am konkreten Gebäude — an seinem Zustand, seiner Technik und daran, was ohnehin ansteht. Schildern Sie uns Ihr Vorhaben, und wir prüfen die technischen Voraussetzungen, bevor Kosten entstehen." buttonHref={routes.kontakt} />
+</BaseLayout>

@@ -1,0 +1,119 @@
+---
+/**
+ * /danke/ — thank-you page shown after a successful contact-form send.
+ *
+ * Not a regular nav item: only reachable via the redirect ContactForm.astro
+ * triggers after a successful send (and, as a no-JavaScript fallback, via
+ * api/kontakt.php itself — see there). robots: noindex in pages.ts, excluded
+ * from the sitemap (astro.config.mjs).
+ *
+ * Deliberately simple structure: confirmation, then the full services
+ * overview (from the same LEISTUNGEN source as the main nav), so someone who
+ * just sent an enquiry can keep browsing right away instead of landing on a
+ * dead end.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import Icon from "../../components/ui/Icon.astro";
+import Button from "../../components/ui/Button.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { routes } from "../../config/site";
+import { LEISTUNGEN } from "../../config/navigation";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+
+const page = PAGES.danke;
+const jsonLd = subpageSchema(page, []);
+---
+
+<BaseLayout page="danke" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Vielen Dank"
+    subtitle="Ihre Anfrage ist bei uns eingegangen"
+    image={heroImage}
+    imageAlt="Wohngebäude im Bestand – BC IMMOWERT, Speyer"
+  />
+
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8" aria-labelledby="danke-titel">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2
+        id="danke-titel"
+        class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+        data-reveal
+      >
+        Wir melden uns in Kürze bei Ihnen
+      </h2>
+      <p class="reveal-on-scroll mt-4 text-base leading-relaxed text-muted" data-reveal>
+        Vielen Dank für Ihre Nachricht. Wir prüfen Ihre Anfrage und melden uns
+        persönlich bei Ihnen, um die nächsten Schritte zu besprechen.
+      </p>
+      <div class="reveal-on-scroll mt-8" data-reveal>
+        <Button href={routes.home} variant="secondary">Zur Startseite</Button>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Further services ----------------
+      Same source as the main nav (LEISTUNGEN), so a new service shows up
+      here automatically, with no second place to maintain. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="weitere-leistungen-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, var(--bc-surface) 96px, var(--bc-surface) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <div class="mx-auto mb-10 max-w-2xl text-center lg:mb-14">
+        <h2
+          id="weitere-leistungen-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Während Sie auf unsere Rückmeldung warten
+        </h2>
+        <p class="reveal-on-scroll mt-4 text-base leading-relaxed text-muted" data-reveal>
+          Ein Überblick über alle unsere Leistungen — falls für Ihr Anliegen
+          noch etwas anderes von Interesse ist.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+        {
+          LEISTUNGEN.map((group, i) => (
+            <div
+              class="reveal-on-scroll rounded-md border border-[color:var(--bc-border)] bg-surface p-6 lg:p-8"
+              data-reveal
+              style={`transition-delay:${i * 100}ms`}
+            >
+              <h3 class="font-display text-lg text-ink">
+                <a href={group.href} class="hover:text-accent">
+                  {group.title}
+                </a>
+              </h3>
+              <ul class="mt-4 list-none divide-y divide-[color:var(--bc-border)] p-0">
+                {group.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      class="group flex items-center justify-between gap-3 py-3 text-sm text-muted transition hover:text-ink"
+                    >
+                      <span>
+                        {item.name}
+                        <span class="block text-xs text-muted/70">{item.sub}</span>
+                      </span>
+                      <span
+                        class="shrink-0 text-accent opacity-0 transition group-hover:opacity-100"
+                        aria-hidden="true"
+                      >
+                        <Icon name="arrow-dr" class="h-3.5 w-3.5" />
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

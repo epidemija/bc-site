@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wave Grid — BC IMMOWERT Animationsarchiv</title>
+    <!--
+      Standalone copy of the wave-grid animation.
+
+      This file exists so the animation survives independently of the Astro
+      project: open it by double-clicking, no build, no server, no dependency.
+      The component used inside the site is
+      src/components/sections/WaveGrid.astro — keep the two in step if either
+      is changed.
+
+      Everything is inline. The mesh is a flat grid projected into perspective
+      and displaced by three summed sine waves, drawn on a 2D canvas.
+    -->
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #1b1b1b;
+        color: #fff;
+        font-family: "Inter Tight", system-ui, sans-serif;
+        font-weight: 300;
+        padding: 40px 20px;
+      }
+      .panel {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: min(700px, 100%);
+        min-height: 520px;
+        overflow: hidden;
+        background: #2f2f2f;
+      }
+      .mesh {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 88%);
+        mask-image: radial-gradient(ellipse at center, black 35%, transparent 88%);
+      }
+      .mesh canvas {
+        width: 100%;
+        height: 100%;
+      }
+      .thirds {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: grid;
+        grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+        opacity: 0.1;
+        pointer-events: none;
+      }
+      .thirds div {
+        border-right: 1px solid #fff;
+        border-bottom: 1px solid #fff;
+      }
+      .thirds div:nth-child(3n) {
+        border-right: 0;
+      }
+      .thirds div:nth-child(n + 7) {
+        border-bottom: 0;
+      }
+      .card {
+        position: relative;
+        z-index: 2;
+        width: 340px;
+        padding: 24px;
+        border-radius: 8px;
+        background: rgb(17 17 17 / 0.85);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+      }
+      .eyebrow {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgb(255 255 255 / 0.4);
+      }
+      .title {
+        margin: 8px 0 0;
+        font-size: 24px;
+      }
+      .subtitle {
+        margin: 0;
+        font-size: 14px;
+        color: rgb(255 255 255 / 0.5);
+      }
+      dl {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 16px;
+        margin: 24px 0 0;
+      }
+      dt {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgb(255 255 255 / 0.4);
+      }
+      dd {
+        margin: 0;
+        font-size: 16px;
+      }
+      .eq {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 3px;
+        height: 40px;
+        margin-top: 24px;
+        overflow: hidden;
+      }
+      .eq span {
+        flex: 1;
+        height: var(--low);
+        border-left: 3px dotted rgb(255 255 255 / 0.8);
+        opacity: 0.6;
+        animation: bar infinite alternate ease-in-out;
+      }
+      @keyframes bar {
+        to {
+          height: var(--peak);
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .eq span {
+          animation: none;
+          height: var(--peak);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <div class="mesh" aria-hidden="true"><canvas data-wave></canvas></div>
+      <div class="thirds" aria-hidden="true">
+        <div></div><div></div><div></div>
+        <div></div><div></div><div></div>
+        <div></div><div></div><div></div>
+      </div>
+
+      <div class="card">
+        <p class="eyebrow">Objektaufnahme</p>
+        <p class="title">Reihenmittelhaus</p>
+        <p class="subtitle">Speyer-West</p>
+        <dl>
+          <div><dt>Wohnfläche</dt><dd>142,6 m²</dd></div>
+          <div><dt>Grundstück</dt><dd>512 m²</dd></div>
+          <div><dt>Baujahr</dt><dd>1978</dd></div>
+          <div><dt>Zustand</dt><dd>gepflegt</dd></div>
+        </dl>
+        <div class="eq" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <script>
+      /* ---- equaliser bars ---- */
+      const PEAKS = [
+        10, 15, 20, 15, 10, 15, 20, 15, 10, 15, 10, 5, 15, 25, 40, 55, 70, 85, 90, 95, 90, 85, 70,
+        55, 40, 25, 15, 10, 15, 20, 30, 20, 15, 10, 15, 20, 25, 15, 10, 15,
+      ];
+      const eq = document.querySelector(".eq");
+      PEAKS.forEach((peak, i) => {
+        const bar = document.createElement("span");
+        bar.style.setProperty("--low", Math.max(8, peak * 0.35) + "%");
+        bar.style.setProperty("--peak", peak + "%");
+        bar.style.animationDuration = (0.5 + (i % 5) * 0.12).toFixed(2) + "s";
+        bar.style.animationDelay = ((i % 7) * 0.08).toFixed(2) + "s";
+        eq.appendChild(bar);
+      });
+
+      /* ---- the mesh ---- */
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const canvas = document.querySelector("[data-wave]");
+      const ctx = canvas.getContext("2d");
+      const COLS = 26;
+      const ROWS = 18;
+      let width = 0;
+      let height = 0;
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = canvas.clientWidth;
+        height = canvas.clientHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener("resize", resize, { passive: true });
+
+      // Rows further away are compressed towards the centre — that alone gives
+      // the depth, with no 3D maths anywhere.
+      function project(cx, cy, t) {
+        const u = cx / (COLS - 1);
+        const v = cy / (ROWS - 1);
+        const depth = 0.35 + v * 0.65;
+        const wave =
+          Math.sin(u * 7 + t) * 0.18 +
+          Math.cos(v * 6 + t * 0.8) * 0.16 +
+          Math.sin((u + v) * 5 - t) * 0.12;
+        return {
+          x: width / 2 + (u - 0.5) * width * 1.35 * depth,
+          y: height * 0.1 + v * height * 0.9 + wave * height * 0.1 * depth,
+        };
+      }
+
+      function draw(now) {
+        const t = now / 1400;
+        ctx.clearRect(0, 0, width, height);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        for (let r = 0; r < ROWS; r++) {
+          ctx.beginPath();
+          for (let c = 0; c < COLS; c++) {
+            const p = project(c, r, t);
+            c === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+        }
+        for (let c = 0; c < COLS; c++) {
+          ctx.beginPath();
+          for (let r = 0; r < ROWS; r++) {
+            const p = project(c, r, t);
+            r === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      if (!reduced) requestAnimationFrame(draw);
+    </script>
+  </body>
+</html>

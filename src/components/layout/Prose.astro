@@ -1,0 +1,130 @@
+---
+/**
+ * Typography wrapper for long-form legal text.
+ *
+ * Legal pages are the one place on this site where someone reads continuously
+ * rather than scanning, so the measure is held near 70 characters and the
+ * headings are quieter than elsewhere — a Datenschutzerklärung with display
+ * type every three paragraphs is harder to read, not easier.
+ *
+ * Styles are applied from the parent so the page bodies stay plain HTML and
+ * the legal text remains easy to compare against a lawyer's revision.
+ *
+ * `wide` drops the 68ch measure cap for the static intro block and the
+ * two-column accordion body on the legal pages — the 68ch limit still
+ * applies inside each accordion answer via .bc-legal-accordion__body,
+ * so a single paragraph is never wider than comfortable reading, only the
+ * overall page section is allowed to use the full column width.
+ */
+interface Props {
+  wide?: boolean;
+}
+const { wide = false } = Astro.props;
+---
+
+<div class:list={["bc-prose", wide ? "max-w-none" : "max-w-[68ch]"]}>
+  <slot />
+</div>
+
+<style is:global>
+  .bc-prose {
+    color: var(--bc-muted);
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  .bc-prose > * + * {
+    margin-top: 1.1em;
+  }
+
+  .bc-prose h2 {
+    color: var(--bc-ink);
+    font-family: var(--font-display), sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-top: 3rem;
+    scroll-margin-top: 6rem;
+  }
+  .bc-prose h3 {
+    color: var(--bc-ink);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-top: 2rem;
+  }
+  .bc-prose h2 + *,
+  .bc-prose h3 + * {
+    margin-top: 0.6em;
+  }
+
+  .bc-prose strong {
+    color: var(--bc-ink);
+    font-weight: 600;
+  }
+
+  .bc-prose a {
+    color: var(--bc-ink);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--bc-accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: color var(--transition-fast);
+  }
+  .bc-prose a:hover {
+    color: var(--bc-accent);
+  }
+
+  .bc-prose ul,
+  .bc-prose ol {
+    padding-left: 1.25rem;
+  }
+  .bc-prose ul {
+    list-style: disc;
+  }
+  .bc-prose ol {
+    list-style: decimal;
+  }
+  .bc-prose li + li {
+    margin-top: 0.4em;
+  }
+  .bc-prose li::marker {
+    color: var(--bc-accent);
+  }
+
+  /* Address blocks and short fact lists inside the legal pages. */
+  .bc-prose address {
+    font-style: normal;
+  }
+  .bc-prose dl {
+    display: grid;
+    gap: 0.35rem 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .bc-prose dl {
+      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+    }
+  }
+  .bc-prose dt {
+    color: var(--bc-ink);
+    font-weight: 600;
+  }
+  .bc-prose dd {
+    margin: 0;
+  }
+
+  /*
+   * Unfilled legal field. Deliberately loud: an Impressum that goes live with
+   * a gap is a legal problem, so a missing value has to be impossible to miss
+   * in a screenshot. `node verify.mjs` fails the build while any of these
+   * remain, so this styling should never be seen by a visitor.
+   */
+  .bc-todo {
+    background: var(--bc-danger);
+    border-radius: 2px;
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    padding: 0.1em 0.5em;
+  }
+</style>

@@ -1,0 +1,100 @@
+---
+/**
+ * Full-width statement band: a dark gradient (the site's own --bc-dark —
+ * the same theme-invariant dark ground AnimatedPageHero uses, so this band
+ * stays dark under both the light and dark theme; --bc-ink flips to a
+ * near-white in dark mode and must never be used here — not a flat colour),
+ * a floor-plan line drawing behind it for texture, and a centred heading +
+ * copy on top.
+ *
+ * A reusable mid-page module — not a page header. Use it wherever a service
+ * page needs to call out one situation or statement with more weight than a
+ * plain text block, without building a one-off section each time.
+ *
+ * No photograph: an image here fights the pattern and reads as a stock
+ * overlay rather than this site's own dark section. The gradient + drawing
+ * combination is deliberately the same idea as the site's other pattern
+ * bands (StepElevation, SurveyContour, FloorPlanLines on the light page),
+ * just recoloured for a dark one.
+ */
+import FloorPlanLinesDark from "../ui/FloorPlanLinesDark.astro";
+import Button from "../ui/Button.astro";
+
+interface CtaLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  heading: string;
+  /** One paragraph, or several — each rendered as its own <p>. */
+  text: string | string[];
+  eyebrow?: string;
+  headingId?: string;
+  /** Same two-button pattern as the homepage Hero — primary + secondary
+   * onDark. Both optional; the band works fine with no buttons at all. */
+  primaryCta?: CtaLink;
+  secondaryCta?: CtaLink;
+}
+
+const { heading, text, eyebrow, headingId = "statement-titel", primaryCta, secondaryCta } = Astro.props;
+const paragraphs = Array.isArray(text) ? text : [text];
+---
+
+<section
+  class="relative overflow-hidden text-white"
+  aria-labelledby={headingId}
+  style="background: radial-gradient(ellipse 90% 100% at 50% 0%, color-mix(in srgb, var(--bc-dark) 88%, var(--bc-accent) 12%) 0%, var(--bc-dark) 55%, color-mix(in srgb, var(--bc-dark) 92%, black) 100%)"
+>
+  {/* A second, warmer wash in the same gold as the pattern and the eyebrow
+      — corner-weighted rather than flat, so the band has some depth rather
+      than reading as one even panel. Screen blend keeps it a glow, not a
+      tint over the text. */}
+  <div
+    class="pointer-events-none absolute inset-0"
+    style="background: radial-gradient(ellipse 70% 60% at 12% 100%, color-mix(in srgb, var(--bc-accent-deco) 22%, transparent) 0%, transparent 60%), radial-gradient(ellipse 70% 60% at 88% 0%, color-mix(in srgb, var(--bc-accent-deco) 16%, transparent) 0%, transparent 60%); mix-blend-mode: screen;"
+    aria-hidden="true"
+  >
+  </div>
+
+  <FloorPlanLinesDark />
+
+  <div class="relative z-10 mx-auto w-full max-w-[1400px] bc-section px-5 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      {
+        eyebrow && (
+          <p class="bc-eyebrow bc-eyebrow-center justify-center" style="color:var(--bc-accent-deco)">
+            <span>{eyebrow}</span>
+          </p>
+        )
+      }
+      <h2
+        id={headingId}
+        class="reveal-on-scroll font-display text-3xl text-white sm:text-4xl lg:text-[40px]"
+        data-reveal
+      >
+        {heading}
+      </h2>
+      <div class="reveal-on-scroll mt-6 space-y-4 text-base leading-relaxed text-white/80" data-reveal style="transition-delay:100ms">
+        {paragraphs.map((p) => <p>{p}</p>)}
+      </div>
+
+      {
+        (primaryCta || secondaryCta) && (
+          <div
+            class="reveal-on-scroll mt-8 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4"
+            data-reveal
+            style="transition-delay:150ms"
+          >
+            {primaryCta && <Button href={primaryCta.href}>{primaryCta.label}</Button>}
+            {secondaryCta && (
+              <Button href={secondaryCta.href} variant="secondary" onDark>
+                {secondaryCta.label}
+              </Button>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>

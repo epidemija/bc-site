@@ -1,0 +1,190 @@
+---
+/**
+ * Price tiers.
+ *
+ * The prices are real and are the same figures fed to the Offer structured
+ * data by the page that renders this — one source, so what a visitor reads and
+ * what Google parses cannot drift apart.
+ *
+ * Every price is a starting price ("ab"), which is stated in words under the
+ * cards as well as in the markup, because a number a reader takes for a fixed
+ * fee is worse than no number.
+ *
+ * PRICE DISPLAY AND GERMAN LAW: the Preisangabenverordnung requires prices
+ * shown to consumers to be total prices including VAT, and to say so. The
+ * `vatNote` prop carries that sentence; it must be set by the office to match
+ * how it actually invoices (§19 UStG small-business status changes the
+ * wording), which is why there is no default.
+ *
+ * LAYOUT: three pastel cards (name, one-line tagline, price, CTA) with the
+ * full feature list inline — that's the whole story up to `lg`. From `lg` the
+ * per-card list is replaced by one comparison table below, aligned under the
+ * three cards, so the same facts aren't read twice on a wide screen.
+ */
+import Icon from "../ui/Icon.astro";
+import Button from "../ui/Button.astro";
+
+export interface PriceTier {
+  /** One-line tagline under the plan name (e.g. "Kompakt und präzise"). */
+  ribbon: string;
+  name: string;
+  /** Numeric, in euro — also used for the Offer schema. */
+  price: number;
+  /** Pre-formatted for display, e.g. "499,00 €". */
+  priceLabel: string;
+  scope: string[];
+  purpose: string[];
+  href: string;
+  /** Unused by this layout; kept so tier data doesn't need to change if a
+   *  future layout wants to highlight one tier again. */
+  featured?: boolean;
+}
+
+/**
+ * One row of the desktop comparison table. `values` has one entry per tier,
+ * in the same order as `tiers`: `true`/`false` render as a check mark or a
+ * dash, a string renders as-is (e.g. a page count that differs by tier).
+ */
+export interface CompareRow {
+  label: string;
+  values: (string | boolean)[];
+}
+
+interface Props {
+  tiers: PriceTier[];
+  /** Heading above each card's "when this tier fits" list. */
+  purposeHeading?: string;
+  /** Statutory VAT sentence. See the note above — no default on purpose. */
+  vatNote?: string;
+  ctaLabel?: string;
+  /** Desktop-only comparison table under the cards. Omit to skip it. */
+  compareRows?: CompareRow[];
+}
+
+const {
+  tiers,
+  purposeHeading = "Anlass und Verwendung",
+  vatNote,
+  ctaLabel = "Unverbindliche Anfrage",
+  compareRows,
+} = Astro.props;
+
+/** One pastel background per card position — cosmetic only. */
+const panelTokens = ["--bc-plan-1", "--bc-plan-2", "--bc-plan-3"];
+
+/** "1.199,00 €" → ["1.199", "00 €"], for the two-size price display. */
+function splitPrice(label: string): [string, string] {
+  const i = label.indexOf(",");
+  return i === -1 ? [label, ""] : [label.slice(0, i), label.slice(i + 1)];
+}
+---
+
+<ul class="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3 lg:gap-8">
+  {
+    tiers.map((tier, i) => {
+      const [major, minor] = splitPrice(tier.priceLabel);
+      const bg = panelTokens[i % panelTokens.length];
+      return (
+        <li
+          class="reveal-on-scroll flex flex-col gap-5 rounded-lg p-6 lg:p-7"
+          style={`background-color:var(${bg});transition-delay:${i * 120}ms`}
+          data-reveal
+        >
+          <div>
+            <h3 class="font-display text-xl text-ink lg:text-2xl">{tier.name}</h3>
+            <p class="mt-1 text-[15px] text-secondary">{tier.ribbon}</p>
+          </div>
+
+          <p class="flex items-baseline gap-1">
+            <span class="text-sm text-secondary">ab</span>
+            <span class="text-[32px] font-semibold text-ink lg:text-[38px]">{major}</span>
+            <span class="text-base font-medium text-secondary">,{minor}</span>
+          </p>
+
+          <Button href={tier.href} block>
+            {ctaLabel}
+          </Button>
+
+          {/* Below `lg` the scope list lives in the card too — from `lg` it
+              moves into the comparison table underneath instead, so it isn't
+              read twice. The "Anlass und Verwendung" list has no equivalent
+              in that table, so it always stays in the card. */}
+          <ul class="mt-1 flex list-none flex-col gap-2.5 p-0 lg:hidden">
+            {tier.scope.map((entry) => (
+              <li class="flex items-start gap-2.5 text-[15px] leading-relaxed text-ink">
+                <Icon name="check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-ink" />
+                <span set:html={entry.replace(/\n/g, " ")} />
+              </li>
+            ))}
+          </ul>
+
+          <div class="mt-1">
+            <h4 class="text-[15px] text-ink">{purposeHeading}</h4>
+            <ul class="mt-2.5 flex list-none flex-col gap-2.5 p-0">
+              {tier.purpose.map((entry) => (
+                <li class="flex items-start gap-2.5 text-[15px] leading-relaxed text-ink">
+                  <Icon name="check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-ink" />
+                  <span>{entry}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </li>
+      );
+    })
+  }
+</ul>
+
+{
+  compareRows && compareRows.length > 0 && (
+    <div class="mt-8 hidden overflow-x-auto lg:block">
+      <table class="w-full min-w-[640px] border-collapse text-left">
+        <thead>
+          <tr>
+            <th scope="col" class="border-b border-[color:var(--bc-border)] py-3" />
+            {tiers.map((tier) => (
+              <th
+                scope="col"
+                class="border-b border-[color:var(--bc-border)] px-4 py-3 text-center text-sm font-medium text-secondary"
+              >
+                {tier.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {compareRows.map((row) => (
+            <tr>
+              <th
+                scope="row"
+                class="border-b border-[color:var(--bc-border)] py-4 pr-4 text-[15px] font-normal text-ink"
+              >
+                {row.label}
+              </th>
+              {row.values.map((value) => (
+                <td class="border-b border-[color:var(--bc-border)] px-4 py-4 text-center text-[15px] text-ink">
+                  {value === true ? (
+                    <Icon name="check-circle" class="mx-auto h-5 w-5 text-ink" />
+                  ) : value === false ? (
+                    <span aria-hidden="true" class="text-subtle">
+                      –
+                    </span>
+                  ) : (
+                    value
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+<p class="mt-6 text-sm leading-relaxed text-muted">
+  Alle genannten Beträge sind Startpreise. Der endgültige Preis richtet sich nach Objektart,
+  Umfang und Aufwand und wird vor der Beauftragung schriftlich vereinbart.{
+    vatNote && ` ${vatNote}`
+  }
+</p>

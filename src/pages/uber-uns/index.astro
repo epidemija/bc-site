@@ -1,0 +1,186 @@
+---
+/**
+ * Über uns.
+ *
+ * Structure follows docs/MASTER-TEMPLATE.md: one <h1> in the page header,
+ * <h2> per section, factual copy supplied by the client, and structured data
+ * built from the shared config.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import Certificates from "../../components/sections/Certificates.astro";
+import Icon from "../../components/ui/Icon.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { ORGANISATION, routes } from "../../config/site";
+import { Picture } from "astro:assets";
+import heroImage from "../../assets/images/uberuns-gutachten-speyer.jpg";
+import Button from "../../components/ui/Button.astro";
+
+const jsonLd = subpageSchema(PAGES.about);
+
+/** What the office does, in the client's own wording, split for scanning. */
+const leistungsfelder: { label: string; icon: "trend" | "analysis" | "building" | "draft" | "report" | "helmet" }[] = [
+  { label: "Wertermittlungen", icon: "trend" },
+  { label: "Bauschadensbewertungen", icon: "analysis" },
+  { label: "Ankaufsbegleitungen", icon: "building" },
+  { label: "Erstellung von Grundrissen", icon: "draft" },
+  { label: "Flächenberechnungen", icon: "report" },
+  { label: "Umbauten, Modernisierungen und Umnutzungen", icon: "helmet" },
+];
+
+/** How the office works, as three short steps rather than a bullet list. */
+const arbeitsweise = [
+  {
+    title: "Unabhängig",
+    text: "Jede Bewertung erfolgt neutral und nach anerkannten Standards — unabhängig davon, welches Ergebnis erwartet wird.",
+  },
+  {
+    title: "Nachvollziehbar",
+    text: "Annahmen, Verfahren und Ergebnisse werden so dokumentiert, dass sie auch von Dritten geprüft werden können.",
+  },
+  {
+    title: "Persönlich",
+    text: "Vom ersten Gespräch bis zum fertigen Gutachten bleibt derselbe Ansprechpartner zuständig.",
+  },
+];
+---
+
+<BaseLayout page="about" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Über uns"
+    subtitle="Fachkompetenz trifft Sachverstand"
+    image={heroImage}
+    imageAlt="Moderne Wohnanlage mit Klinkerfassade und Balkonen – Bestandsimmobilien, wie sie BC IMMOWERT bewertet und begleitet"
+  />
+
+  <Breadcrumbs page="about" />
+
+  {/* ---------------- Wer wir sind ---------------- */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="buero-titel"
+  >
+    <div class="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center lg:gap-20">
+      <div>
+        <h2
+          id="buero-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Ingenieur- und Sachverständigenbüro
+        </h2>
+        <p
+          class="reveal-on-scroll mt-6 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Mit unserer Expertise und Erfahrung als Bauingenieur und Bausachverständiger begleiten
+          wir Privatkunden und Unternehmen bei der Bewertung von Immobilien und Bauschäden sowie
+          bei vielfältigen Vorhaben rund um Bestandsimmobilien. Dazu zählen unter anderem
+          Wertermittlungen, Bauschadensbewertungen, Ankaufsbegleitungen, die Erstellung von
+          Grundrissen und Flächenberechnungen sowie die fachliche Unterstützung bei Umbauten,
+          Modernisierungen und Umnutzungen.
+        </p>
+
+        <div class="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            leistungsfelder.map((feld, i) => (
+              <div
+                class="reveal-on-scroll group flex items-start gap-3 rounded-md p-3 transition-colors hover:bg-[color:var(--bc-surface)]"
+                data-reveal
+                style={`transition-delay:${150 + i * 60}ms`}
+              >
+                <Icon name={feld.icon} class="mt-0.5 h-6 w-6 shrink-0 text-accent-deco" />
+                <span class="pt-0.5 text-[15px] font-medium text-ink">{feld.label}</span>
+              </div>
+            ))
+          }
+        </div>
+
+        <Button href={routes.kontakt} class="mt-8">Ihre Anfrage</Button>
+      </div>
+
+      {/* Hero image: shows the type of properties BC IMMOWERT works with */}
+      <div class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]" data-reveal style="transition-delay:150ms">
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960, 1200]}
+          quality={92}
+          sizes="(min-width: 1024px) 55vw, 100vw"
+          alt="Moderne Wohnanlage mit Klinkerfassade und Balkonen – Bestandsimmobilien, wie sie BC IMMOWERT bewertet und begleitet"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Arbeitsweise ---------------- */}
+  {/* No border: fades to the page colour over a fixed 96px at top and
+      bottom, same treatment as the other banded sections on the site. */}
+  <section
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, var(--bc-surface) 96px, var(--bc-surface) calc(100% - 96px), var(--bc-page) 100%)"
+    aria-labelledby="arbeitsweise-titel"
+  >
+    <div class="mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
+        <div
+          class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+          data-reveal
+        >
+          <Picture
+            src={heroImage}
+            formats={["avif", "webp"]}
+            widths={[480, 720, 960, 1200]}
+            quality={92}
+            sizes="(min-width: 1024px) 55vw, 100vw"
+            alt="Moderne Wohnanlage mit Klinkerfassade und Balkonen – Bestandsimmobilien, wie sie BC IMMOWERT bewertet und begleitet"
+            class="h-full w-full object-cover"
+          />
+        </div>
+
+        <div>
+          <h2
+            id="arbeitsweise-titel"
+            class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+            data-reveal
+          >
+            Wie wir arbeiten
+          </h2>
+
+          <div class="mt-8">
+            {
+              arbeitsweise.map((item, i) => (
+                <div
+                  class="reveal-on-scroll flex gap-x-5"
+                  data-reveal
+                  style={`transition-delay:${i * 120}ms`}
+                >
+                  <div
+                    class={`relative shrink-0${
+                      i < arbeitsweise.length - 1
+                        ? " after:absolute after:left-1/2 after:top-8 after:bottom-0 after:-translate-x-1/2 after:border-l after:border-[color:var(--bc-border)]"
+                        : ""
+                    }`}
+                  >
+                    <span class="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--bc-border)] text-xs font-semibold text-accent">
+                      {i + 1}
+                    </span>
+                  </div>
+                  <div class={`grow pt-1 ${i < arbeitsweise.length - 1 ? "pb-8" : ""}`}>
+                    <p class="text-[15px] leading-relaxed text-muted lg:text-base">
+                      <span class="font-medium text-ink">{item.title}:</span> {item.text}
+                    </p>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Certificates />
+</BaseLayout>

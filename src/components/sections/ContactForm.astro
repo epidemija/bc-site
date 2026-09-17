@@ -1,0 +1,302 @@
+---
+/**
+ * Contact form card — laid out after Preline's "contact page with form card and
+ * support links": a bordered card, `sr-only` labels with visible placeholders,
+ * first/last name two-up on `sm`, then full-width fields, a full-width submit
+ * and centred fine print underneath.
+ *
+ * Two deliberate departures from that source, both because this is a German
+ * Sachverständigenbüro and not a SaaS product:
+ *
+ *  - the two dependent selects stay. They cost the visitor one click and save a
+ *    round of e-mail asking which service was meant, and their options come
+ *    straight from LEISTUNGEN so a new service page appears here by itself.
+ *  - the consent checkbox stays. It is required under the DSGVO, and
+ *    `node verify.mjs` fails the build if it disappears.
+ *
+ * Progressive enhancement: a real <form> with a real action, so it still submits
+ * if the script never runs. The script only upgrades it to send in the
+ * background and report the result inline.
+ *
+ * Spam handling is a honeypot rather than a captcha — a captcha would mean
+ * loading Google code on a site that currently needs no cookie banner at all.
+ */
+import { LEISTUNGEN } from "../../config/navigation";
+import { routes } from "../../config/site";
+import Button from "../ui/Button.astro";
+
+const groups = LEISTUNGEN.map((g) => ({
+  title: g.title,
+  items: g.items.map((i) => i.name),
+}));
+
+/* One class for every control. Height, border, radius, type and focus ring
+   come from .bc-input in global.css, which is the same 52px box the buttons
+   use — that shared height is most of why the form now reads as part of the
+   site rather than as an embedded plugin. */
+const field = "bc-input";
+
+/**
+ * reCAPTCHA v3 site key — public by design, safe in the shipped HTML/JS.
+ * The matching secret key only ever lives server-side, in api/kontakt.js.
+ * Unset in local dev: the form still works, it just submits without a
+ * token, and the API rejects it exactly like a bot submission would — see
+ * api/kontakt.js for that behaviour.
+ */
+const RECAPTCHA_SITE_KEY = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+---
+
+{/* async (14.09.2026): without it this tag blocks HTML parsing right here
+    until Google's script downloads and runs — the one concrete, fixable
+    reason /kontakt/ can feel slower than other pages (no other page loads
+    reCAPTCHA at all). Safe to load async: the only place that touches
+    window.grecaptcha is the form's submit handler below, and it already
+    does `await grecaptcha.ready(...)` before using it — so it doesn't
+    matter whether this script finishes before or after the rest of the
+    page, only that it's done by the time someone actually clicks submit,
+    which async doesn't change. */}
+{
+  RECAPTCHA_SITE_KEY && (
+    <script
+      src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
+      is:inline
+      async
+    ></script>
+  )
+}
+
+<div
+  class="bc-card flex flex-col p-6 lg:p-8"
+>
+  <h2 class="font-display mb-6 text-xl text-ink">Formular ausfüllen</h2>
+
+  <form id="kontaktformular" method="POST" action="/api/kontakt" novalidate data-groups={JSON.stringify(groups)}>
+    <div class="grid gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="vorname" class="sr-only">Vorname</label>
+          <input
+            type="text"
+            name="vorname"
+            id="vorname"
+            autocomplete="given-name"
+            class={field}
+            placeholder="Vorname"
+            required
+          />
+        </div>
+        <div>
+          <label for="nachname" class="sr-only">Nachname</label>
+          <input
+            type="text"
+            name="nachname"
+            id="nachname"
+            autocomplete="family-name"
+            class={field}
+            placeholder="Nachname"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="email" class="sr-only">E-Mail</label>
+        <input
+          type="email"
+          name="email"
+          id="email"
+          autocomplete="email"
+          class={field}
+          placeholder="E-Mail"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="telefon" class="sr-only">Telefonnummer</label>
+        <input
+          type="tel"
+          name="telefon"
+          id="telefon"
+          autocomplete="tel"
+          class={field}
+          placeholder="Telefonnummer"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="bereich" class="sr-only">Leistungsbereich</label>
+          <select name="bereich" id="bereich" class={field}>
+            <option value="">Leistungsbereich</option>
+            {groups.map((g) => <option value={g.title}>{g.title}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="leistung" class="sr-only">Leistung</label>
+          <select name="leistung" id="leistung" class={field}>
+            <option value="">Leistung</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="nachricht" class="sr-only">Angaben zum Vorhaben</label>
+        <textarea
+          id="nachricht"
+          name="nachricht"
+          rows="4"
+          class={field}
+          placeholder="Angaben zum Vorhaben"
+          required></textarea>
+      </div>
+
+      {/* Honeypot: off-screen rather than display:none, which some bots detect. */}
+      <div aria-hidden="true" class="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+        <label for="website">Bitte dieses Feld leer lassen</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="flex items-start gap-3">
+        <input
+          class="mt-1 h-4 w-4 shrink-0 accent-[color:var(--bc-accent-solid)]"
+          id="einwilligung"
+          name="einwilligung"
+          type="checkbox"
+          required
+        />
+        <label class="text-sm leading-relaxed text-muted" for="einwilligung">
+          Ich habe die <a
+            href={routes.datenschutz}
+            class="font-medium text-ink underline decoration-[color:var(--bc-accent)] decoration-2 underline-offset-4 hover:text-accent"
+            >Datenschutzerklärung</a
+          > gelesen und bin mit der Verarbeitung meiner Angaben einverstanden.
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-6 grid">
+      <Button type="submit" block><span data-submit-label>Anfrage senden</span></Button>
+    </div>
+
+    <div class="mt-4 text-center">
+      <p class="text-sm text-muted">Wir melden uns in Kürze bei Ihnen.</p>
+      <p
+        class="mt-3 hidden rounded-sm border px-4 py-3 text-left text-sm"
+        data-form-status
+        role="status"
+        aria-live="polite"
+      >
+      </p>
+    </div>
+  </form>
+</div>
+
+<script define:vars={{ RECAPTCHA_SITE_KEY, DANKE_URL: routes.danke }}>
+  const form = document.getElementById("kontaktformular");
+  if (form) {
+    const groups = JSON.parse(form.dataset.groups || "[]");
+    const bereich = form.querySelector("#bereich");
+    const leistung = form.querySelector("#leistung");
+    const status = form.querySelector("[data-form-status]");
+    const button = form.querySelector('button[type="submit"]');
+    const buttonLabel = form.querySelector("[data-submit-label]");
+
+    /** Refill the second select whenever the first one changes. */
+    const syncLeistung = () => {
+      const group = groups.find((g) => g.title === bereich.value);
+      leistung.innerHTML = "";
+      leistung.add(new Option(group ? "Leistung" : "Zuerst Bereich wählen", ""));
+      group?.items.forEach((name) => leistung.add(new Option(name, name)));
+      leistung.disabled = !group;
+    };
+    bereich.addEventListener("change", syncLeistung);
+    syncLeistung();
+
+    /** Preselect from ?leistung= so service pages can deep-link into the form. */
+    const wanted = new URLSearchParams(location.search).get("leistung");
+    if (wanted) {
+      const group = groups.find((g) => g.items.includes(wanted));
+      if (group) {
+        bereich.value = group.title;
+        syncLeistung();
+        leistung.value = wanted;
+      }
+    }
+
+    const show = (message, ok) => {
+      status.textContent = message;
+      status.className =
+        "mt-3 rounded-sm border px-4 py-3 text-left text-sm " +
+        (ok
+          ? "border-[color:var(--bc-accent)] bg-[color:var(--bc-page)] text-ink"
+          : "border-red-500/50 bg-red-500/5 text-red-700 dark:text-red-400");
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      // Native validity first, so the browser's own messages do the work.
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      button.disabled = true;
+      buttonLabel.textContent = "Wird gesendet …";
+
+      try {
+        // reCAPTCHA v3 runs invisibly: a token is fetched right before send,
+        // never shown to the visitor. If the key is unset (local dev) or the
+        // script never loaded (blocked by an ad blocker, offline), the token
+        // stays empty and api/kontakt.js rejects the request server-side —
+        // same outcome as a bot submission, so nothing needs to degrade here.
+        let recaptchaToken = "";
+        const grecaptcha = window.grecaptcha;
+        if (RECAPTCHA_SITE_KEY && grecaptcha) {
+          await new Promise((resolve) => grecaptcha.ready(resolve));
+          recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "kontakt" });
+        }
+
+        // Lead source: which page the visitor came from right before landing
+        // on /kontakt/ (document.referrer — same-origin navigation keeps the
+        // full path under the site's Referrer-Policy), plus any UTM
+        // parameters if this visit came from a tracked campaign link. Both
+        // are informational only, never required — included in the e-mail so
+        // a lead can be traced back to the page or campaign that produced it.
+        const params = new URLSearchParams(location.search);
+        const utm = {};
+        for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]) {
+          const value = params.get(key);
+          if (value) utm[key] = value;
+        }
+
+        const payload = {
+          ...Object.fromEntries(new FormData(form)),
+          recaptchaToken,
+          quelle: document.referrer || "",
+          ...utm,
+        };
+
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error(String(response.status));
+        // Away to the Danke page — no need to reset the form or show an
+        // inline message, the visitor is leaving this page.
+        location.href = DANKE_URL;
+        return;
+      } catch {
+        show(
+          "Das Senden hat nicht funktioniert. Bitte schreiben Sie an info@bc-immowert.de oder rufen Sie an.",
+          false
+        );
+      } finally {
+        button.disabled = false;
+        buttonLabel.textContent = "Anfrage senden";
+      }
+    });
+  }
+</script>

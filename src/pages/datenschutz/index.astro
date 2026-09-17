@@ -1,0 +1,387 @@
+---
+/**
+ * Datenschutzerklärung — DSGVO / TDDDG.
+ *
+ * Written for what this site actually does: fonts served from our own
+ * domain, no third-party requests on page load. reCAPTCHA is the one
+ * always-on exception (legitimate interest, section 3). Google Analytics
+ * is opt-in only — it loads solely once a visitor accepts the
+ * external-content consent banner, and stays off entirely unless
+ * PUBLIC_GA4_MEASUREMENT_ID is even configured. `node verify.mjs` asserts
+ * against the built output that no such request happens without one of
+ * these two named exceptions, so this page and the code cannot silently
+ * drift apart.
+ *
+ * Layout: §1 (Verantwortlicher) — who is processing your data and how to
+ * reach them — stays a static block, same reasoning as the Impressum's
+ * intro. Every other numbered section is a collapsible LegalAccordion item
+ * across a two-column layout: this document is long enough that a flat
+ * scroll buries the sections a visitor actually came for (often "Ihre
+ * Rechte" or "Reichweitenmessung"), and each item stays a real, linkable
+ * DOM element either way.
+ *
+ * Not legal advice — a Fachanwalt should read this before the domain moves.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+import Prose from "../../components/layout/Prose.astro";
+import LegalAccordionItem from "../../components/ui/LegalAccordionItem.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { ORGANISATION as site, legal, routes } from "../../config/site";
+
+const page = PAGES.datenschutz;
+const jsonLd = subpageSchema(page, []);
+const { address } = site;
+const authority = legal.dataProtectionAuthority;
+---
+
+<BaseLayout page="datenschutz" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Datenschutzerklärung"
+    subtitle="Informationen nach Art. 13 und 14 DSGVO"
+    image={heroImage}
+    imageAlt="Speyerer Dom bei Sonnenuntergang – BC IMMOWERT, Speyer"
+  />
+
+  <Breadcrumbs page="datenschutz" />
+
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8">
+    <Prose wide>
+      <div class="bc-legal-static">
+        <h2 class="!mt-0">1. Verantwortlicher</h2>
+        <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+        <address>
+          {legal.owner}<br />
+          {site.name}<br />
+          {address.street}<br />
+          {address.postalCode} {address.city}<br />
+          Telefon: <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
+          E-Mail: <a href={`mailto:${site.email}`}>{site.email}</a>
+        </address>
+        <p class="!mt-4">
+          Ein Datenschutzbeauftragter ist gesetzlich nicht bestellt, da die Voraussetzungen des § 38
+          BDSG nicht vorliegen. Für alle Fragen zum Datenschutz erreichen Sie uns unter den oben
+          genannten Kontaktdaten.
+        </p>
+      </div>
+
+      <div class="bc-legal-grid !mt-10" data-legal-accordion>
+        <LegalAccordionItem title="2. Grundsätzliches" open>
+          <p>
+            Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung dieser Website
+            und zur Bearbeitung Ihrer Anfragen erforderlich ist. Ohne Ihre Zustimmung lädt diese
+            Website keine Analyse- oder Trackingdienste: Die Reichweitenmessung per Google Analytics
+            (Abschnitt 9) ist ausschließlich aktiv, wenn wir sie eingerichtet haben <em>und</em> Sie ihr
+            im Banner für externe Inhalte zugestimmt haben. Weitere Inhalte Dritter werden nicht
+            automatisch geladen; die einzigen weiteren Ausnahmen sind die beiden Kartendarstellungen
+            auf der Kontaktseite und der Gutachten-Seite, die jeweils erst nach einem ausdrücklichen
+            Klick geladen werden (Abschnitte 11 und 12). Schriftarten werden von unserem eigenen
+            Server ausgeliefert, nicht von externen Anbietern. Ein Cookie-Banner erscheint daher nur,
+            wenn die Reichweitenmessung tatsächlich eingerichtet ist.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="3. Hosting">
+          <p>
+            Diese Website wird bei {legal.host.name}, {legal.host.address}, gehostet. Beim Aufruf der
+            Website verarbeitet der Anbieter die technisch erforderlichen Verbindungsdaten (siehe
+            Abschnitt 4) in unserem Auftrag.
+          </p>
+          <p>
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt in
+            einer sicheren, schnellen und zuverlässigen Bereitstellung dieser Website. Mit dem
+            Anbieter besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.
+          </p>
+          <p>
+            Der Anbieter hat seinen Sitz im Vereinigten Königreich. Für das Vereinigte Königreich
+            besteht ein Angemessenheitsbeschluss der EU-Kommission nach Art. 45 DSGVO, sodass für
+            diese Übermittlung keine zusätzlichen Garantien erforderlich sind. Einzelheiten zur
+            Datenverarbeitung finden Sie in der{" "}
+            <a href={legal.host.privacyUrl} rel="noopener noreferrer" target="_blank">
+              Datenschutzerklärung des Anbieters
+            </a>.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="4. Server-Logfiles">
+          <p>
+            Bei jedem Aufruf einer Seite werden automatisch Daten übertragen, die Ihr Browser sendet
+            und die technisch erforderlich sind, um Ihnen die Seite anzuzeigen:
+          </p>
+          <ul>
+            <li>gekürzte IP-Adresse des anfragenden Geräts</li>
+            <li>Datum und Uhrzeit des Zugriffs</li>
+            <li>Name und URL der abgerufenen Datei</li>
+            <li>übertragene Datenmenge und Meldung über den Abrufstatus</li>
+            <li>verwendeter Browsertyp und dessen Version sowie das Betriebssystem</li>
+            <li>die zuvor besuchte Seite (Referrer), sofern Ihr Browser diese übermittelt</li>
+          </ul>
+          <p>
+            Diese Daten werden nicht mit anderen Datenquellen zusammengeführt und dienen nicht der
+            Identifizierung einzelner Personen. Die Verarbeitung erfolgt auf Grundlage von Art. 6
+            Abs. 1 lit. f DSGVO zum Zweck des sicheren Betriebs und der Abwehr von Angriffen. Die
+            Daten werden nach spätestens 30 Tagen gelöscht, sofern sie nicht ausnahmsweise zur
+            Aufklärung eines konkreten Missbrauchsfalls länger benötigt werden.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="5. Kontaktaufnahme per E-Mail oder Telefon">
+          <p>
+            Wenn Sie uns per E-Mail oder Telefon kontaktieren, verarbeiten wir die von Ihnen
+            mitgeteilten Angaben, um Ihre Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1
+            lit. b DSGVO, soweit die Anfrage der Anbahnung oder Durchführung eines Vertrags dient, im
+            Übrigen Art. 6 Abs. 1 lit. f DSGVO aufgrund unseres berechtigten Interesses an der
+            Beantwortung von Anfragen.
+          </p>
+          <p>
+            Wir löschen diese Daten, sobald sie für die Zwecke der Bearbeitung nicht mehr erforderlich
+            sind und keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Handels- und
+            steuerrechtliche Aufbewahrungsfristen betragen bis zu zehn Jahre (§ 147 AO, § 257 HGB).
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="6. Kontaktformular">
+          <p>
+            Über das Formular auf der Seite <a href={routes.kontakt}>Kontakt</a> können Sie uns eine
+            Anfrage senden. Verarbeitet werden die von Ihnen eingegebenen Angaben — Name,
+            E-Mail-Adresse, die gewählte Leistung sowie Ihre Nachricht — ausschließlich zur
+            Bearbeitung dieser Anfrage.
+          </p>
+          <p>
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO für vorvertragliche Maßnahmen, im Übrigen
+            Art. 6 Abs. 1 lit. f DSGVO. Die Angabe von Name, E-Mail-Adresse und Nachricht ist
+            erforderlich, um die Anfrage beantworten zu können; alle weiteren Angaben sind freiwillig.
+          </p>
+          <p>
+            Für den Versand der Formularnachricht setzen wir folgenden Dienstleister als
+            Auftragsverarbeiter ein: {legal.formProcessor.name}, {legal.formProcessor.address}. Mit
+            diesem Anbieter besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.
+          </p>
+          <p>
+            Der Anbieter hat seinen Sitz in den USA. Eine Übermittlung personenbezogener Daten in die
+            USA wird auf die Standardvertragsklauseln der EU-Kommission nach Art. 46 Abs. 2 lit. c
+            DSGVO gestützt. Einzelheiten zur Datenverarbeitung finden Sie in der{" "}
+            <a href={legal.formProcessor.privacyUrl} rel="noopener noreferrer" target="_blank">
+              Datenschutzerklärung des Anbieters
+            </a>.
+          </p>
+          <p>
+            Zum Schutz vor automatisierten Nachrichten enthält das Formular außerdem ein für Sie
+            unsichtbares Feld, das von Menschen nicht ausgefüllt wird. Es werden dabei keine
+            personenbezogenen Daten an Dritte übermittelt und kein Profil gebildet.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="7. Spam- und Missbrauchsschutz (Google reCAPTCHA)">
+          <p>
+            Das Kontaktformular ist zusätzlich durch den Dienst reCAPTCHA des Anbieters{" "}
+            {legal.recaptcha.name}, {legal.recaptcha.address} ("Google"), geschützt. reCAPTCHA
+            analysiert dabei im Hintergrund automatisiert Verhaltensmerkmale (z. B. Mausbewegungen
+            sowie Zeitpunkt und Art der Interaktion), um automatisierte Formularübermittlungen von
+            menschlichen zu unterscheiden. Eine sichtbare Abfrage oder Interaktion ist damit für Sie
+            nicht verbunden.
+          </p>
+          <p>
+            Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) am Schutz
+            dieser Website und ihrer Nutzer vor automatisierten Zugriffen, Spam und Missbrauch.
+          </p>
+          <p>
+            Weitere Informationen zu Umfang und Zweck der Datenerhebung durch Google sowie zu Ihren
+            diesbezüglichen Rechten und Einstellungsmöglichkeiten finden Sie in der{" "}
+            <a href={legal.recaptcha.privacyUrl} rel="noopener noreferrer" target="_blank">
+              Datenschutzerklärung von Google
+            </a>.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="8. Bildmaterial">
+          <p>
+            {legal.images.note}
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="9. Reichweitenmessung (Google Analytics)" id="externe-inhalte">
+          <p>
+            Sofern eingerichtet, nutzen wir auf dieser Website Google Analytics, einen
+            Webanalysedienst des Anbieters {legal.analytics.name}, {legal.analytics.address}
+            ("Google"), zur anonymisierten Auswertung des Nutzungsverhaltens (z. B. aufgerufene
+            Seiten, Verweildauer, Herkunft der Zugriffe).
+          </p>
+          <p>
+            Google Analytics wird ausschließlich geladen, nachdem Sie der Einbindung externer
+            Inhalte zugestimmt haben — ohne diese Zustimmung findet keinerlei Verbindung zu Google
+            statt. Rechtsgrundlage ist daher ausschließlich Ihre Einwilligung nach Art. 6 Abs. 1 lit.
+            a DSGVO. Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft über unsere{" "}
+            <a href={routes.cookies}>Cookie-Einstellungen</a> widerrufen.
+          </p>
+          <p>
+            Bei aktivierter Messung wird Ihre IP-Adresse durch Google gekürzt und nicht im Klartext
+            gespeichert ("IP-Anonymisierung"). Dabei werden Cookies gesetzt (u. a. <code>_ga</code>,{" "}
+            <code>_ga_*</code>) mit einer Speicherdauer von bis zu 14 Monaten. Der Anbieter hat seinen
+            EU-Sitz in Irland; eine etwaige Übermittlung an Google LLC in die USA wird auf die
+            Standardvertragsklauseln der EU-Kommission nach Art. 46 Abs. 2 lit. c DSGVO gestützt.
+          </p>
+          <p>
+            Weitere Informationen finden Sie in der{" "}
+            <a href={legal.analytics.privacyUrl} rel="noopener noreferrer" target="_blank">
+              Datenschutzerklärung von Google
+            </a>.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="10. Lokale Speicherung im Browser">
+          <p>
+            Diese Website speichert eine einzige Einstellung lokal in Ihrem Browser: Ihre Wahl
+            zwischen heller und dunkler Darstellung (Schlüssel <code>bc-theme</code>). Diese
+            Information verbleibt auf Ihrem Gerät, wird nicht an uns oder Dritte übertragen und
+            enthält keinen Personenbezug.
+          </p>
+          <p>
+            Die Speicherung erfolgt gemäß § 25 Abs. 2 Nr. 2 TDDDG ohne Einwilligung, da sie
+            ausdrücklich von Ihnen durch das Betätigen des Umschalters veranlasst wird. Sie können den
+            Eintrag jederzeit über die Einstellungen Ihres Browsers löschen.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="11. Kartendarstellung (OpenStreetMap)">
+          <p>
+            Auf der Seite <a href={routes.kontakt}>Kontakt</a> bieten wir eine Karte zur Anfahrt an.
+            Die Karte wird von der OpenStreetMap Foundation, St John's Innovation Centre, Cowley
+            Road, Cambridge, CB4 0WS, Vereinigtes Königreich, bereitgestellt.
+          </p>
+          <p>
+            <strong>Die Karte wird nicht automatisch beim Aufruf der Seite geladen.</strong> Zunächst
+            wird lediglich ein Platzhalter angezeigt; es findet keinerlei Verbindung zu OpenStreetMap
+            statt. Erst wenn Sie der Einbindung externer Inhalte zustimmen — über das Banner, über
+            unsere <a href={routes.cookies}>Cookie-Einstellungen</a> oder direkt über die
+            Schaltfläche „Karte laden" — wird die Karte nachgeladen und dabei Ihre IP-Adresse an
+            OpenStreetMap übertragen. Diese Zustimmung gilt einheitlich für alle auf dieser Website
+            eingebundenen externen Inhalte, nicht nur für diese Karte.
+          </p>
+          <p>
+            Rechtsgrundlage für diese Übermittlung ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a
+            DSGVO. Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft über unsere{" "}
+            <a href={routes.cookies}>Cookie-Einstellungen</a> widerrufen. Für das Vereinigte
+            Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission nach Art. 45 DSGVO.
+          </p>
+          <p>
+            Alternativ können Sie die Karte über den daneben stehenden Link direkt bei OpenStreetMap
+            öffnen. Weitere Informationen finden Sie in der{" "}
+            <a
+              href="https://osmfoundation.org/wiki/Privacy_Policy"
+              rel="noopener noreferrer"
+              target="_blank">Datenschutzerklärung der OpenStreetMap Foundation</a
+            >.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="12. Kartendarstellung (Einsatzgebiet, Datawrapper)">
+          <p>
+            Auf den Seiten <a href={routes.gutachten}>Gutachten</a>,{" "}
+            <a href={routes.ingenieurleistungen}>Ingenieurleistungen</a> und{" "}
+            <a href={routes.dienstleistungen}>Dienstleistungen</a> bieten wir eine interaktive
+            Übersichtskarte unseres Einsatzgebiets an. Die Karte wird vom Anbieter{" "}
+            {legal.datawrapper.name}, {legal.datawrapper.address}, bereitgestellt.
+          </p>
+          <p>
+            <strong>Die Karte wird nicht automatisch beim Aufruf der Seite geladen.</strong> Zunächst
+            wird lediglich ein Platzhalter angezeigt; es findet keinerlei Verbindung zu Datawrapper
+            statt. Erst wenn Sie der Einbindung externer Inhalte zustimmen — über das Banner, über
+            unsere <a href={routes.cookies}>Cookie-Einstellungen</a> oder direkt über die
+            Schaltfläche „Karte laden" — wird die Karte nachgeladen und dabei Ihre IP-Adresse an
+            Datawrapper übertragen. Diese Zustimmung gilt einheitlich für alle auf dieser Website
+            eingebundenen externen Inhalte, nicht nur für diese Karte. Nach Angaben des Anbieters
+            werden dabei keine Cookies gesetzt und keine Trackingdienste eingebunden.
+          </p>
+          <p>
+            Rechtsgrundlage für diese Übermittlung ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a
+            DSGVO. Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft über unsere{" "}
+            <a href={routes.cookies}>Cookie-Einstellungen</a> widerrufen. Der Anbieter hat seinen
+            Sitz in Deutschland; eine Übermittlung in Drittstaaten findet nicht statt.
+          </p>
+          <p>
+            Weitere Informationen finden Sie in der{" "}
+            <a href={legal.datawrapper.privacyUrl} rel="noopener noreferrer" target="_blank">
+              Datenschutzerklärung von Datawrapper
+            </a>.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="13. Empfänger von Daten">
+          <p>
+            Eine Weitergabe Ihrer Daten findet nur an die in dieser Erklärung genannten
+            Auftragsverarbeiter statt sowie dann, wenn wir gesetzlich dazu verpflichtet sind. Ein
+            Verkauf von Daten findet nicht statt. Eine automatisierte Entscheidungsfindung
+            einschließlich Profiling nach Art. 22 DSGVO findet nicht statt.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="14. Ihre Rechte">
+          <p>Sie haben uns gegenüber jederzeit folgende Rechte:</p>
+          <ul>
+            <li><strong>Auskunft</strong> über die zu Ihrer Person gespeicherten Daten (Art. 15 DSGVO)</li>
+            <li><strong>Berichtigung</strong> unrichtiger Daten (Art. 16 DSGVO)</li>
+            <li><strong>Löschung</strong> Ihrer Daten (Art. 17 DSGVO)</li>
+            <li><strong>Einschränkung</strong> der Verarbeitung (Art. 18 DSGVO)</li>
+            <li><strong>Datenübertragbarkeit</strong> (Art. 20 DSGVO)</li>
+            <li>
+              <strong>Widerruf</strong> einer erteilten Einwilligung mit Wirkung für die Zukunft (Art. 7
+              Abs. 3 DSGVO)
+            </li>
+          </ul>
+          <p>
+            <strong>Widerspruchsrecht:</strong> Soweit wir Daten auf Grundlage von Art. 6 Abs. 1 lit. f
+            DSGVO verarbeiten, können Sie der Verarbeitung aus Gründen, die sich aus Ihrer besonderen
+            Situation ergeben, jederzeit widersprechen (Art. 21 DSGVO).
+          </p>
+          <p>
+            Zur Ausübung genügt eine formlose Nachricht an{" "}
+            <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="15. Beschwerderecht bei der Aufsichtsbehörde">
+          <p>
+            Unbeschadet anderer Rechtsbehelfe steht Ihnen ein Beschwerderecht bei einer
+            Datenschutz-Aufsichtsbehörde zu (Art. 77 DSGVO). Die für uns zuständige Behörde ist:
+          </p>
+          <address>
+            {authority.name}<br />
+            {authority.address}<br />
+            <a href={authority.url} rel="noopener noreferrer" target="_blank">
+              {authority.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+            </a>
+          </address>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="16. Sicherheit der Übertragung">
+          <p>
+            Diese Website wird ausschließlich verschlüsselt über HTTPS ausgeliefert. Zusätzlich sind
+            Sicherheitsmechanismen wie eine Content-Security-Policy und HSTS aktiv, die die Einbindung
+            fremder Inhalte und unverschlüsselte Verbindungen unterbinden.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="17. Änderungen dieser Erklärung">
+          <p>
+            Wir passen diese Datenschutzerklärung an, sobald sich die Funktionen dieser Website oder
+            die Rechtslage ändern. Es gilt jeweils die hier abrufbare Fassung.
+          </p>
+        </LegalAccordionItem>
+      </div>
+
+      <div class="mt-10 rounded-sm border border-[color:var(--bc-border)] bg-[color:var(--bc-surface-subtle)] px-4 py-3">
+        <p class="!mt-0 text-sm text-muted">
+          Diese Seite befindet sich aktuell in anwaltlicher Prüfung.
+        </p>
+      </div>
+
+      <div class="bc-legal-static !mt-6">
+        <p class="!mt-0 text-sm">Stand: {legal.lastUpdated.split("-").reverse().join(".")}</p>
+      </div>
+    </Prose>
+  </section>
+</BaseLayout>

@@ -1,0 +1,98 @@
+---
+/**
+ * Page header for the three service categories.
+ *
+ * Rule of the site (docs/MASTER-TEMPLATE.md §5d): category pages lead with an
+ * animated graphic, individual services lead with a photograph. A category has
+ * no single subject to photograph, and reusing a child page's photo here would
+ * make the pair look duplicated.
+ *
+ * The background stays dark in both themes, because the site header is drawn
+ * over it in its overlay variant and expects light-on-dark up there.
+ *
+ * The <h1> is plain text painted immediately — the graphic is decorative and
+ * never the Largest Contentful Paint element, so nothing waits for it.
+ */
+interface Props {
+  title: string;
+  subtitle?: string;
+  /**
+   * One sentence under the subtitle. Optional. Rendered as HTML (set:html),
+   * not escaped text — every caller is our own static copy, never user
+   * input. This lets a caller wrap one phrase in a plain
+   * <span class="lg:whitespace-nowrap"> so it never breaks mid-phrase on
+   * desktop (see /gutachten/), the same technique used on Hero's H1 and
+   * PageHero's subtitle. Keep any markup here to that one pattern.
+   */
+  intro?: string;
+  /** Faint grid-line overlay behind the glow. On by default; a page can turn it off and keep only the gradient. */
+  pattern?: boolean;
+}
+const { title, subtitle, intro, pattern = true } = Astro.props;
+---
+
+<section class="animated-hero relative overflow-hidden text-white" aria-labelledby="seiten-titel">
+  {pattern && <div class="hero-grid absolute inset-0" aria-hidden="true"></div>}
+  <div class="hero-glow absolute inset-0" aria-hidden="true"></div>
+  <div
+    class="relative z-10 mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-5 pb-14 pt-[168px] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pb-20 lg:pt-[220px]"
+  >
+    <div>
+      <h1
+        id="seiten-titel"
+        class="reveal bc-hero-title font-display text-white"
+        style="animation-delay:.15s"
+      >
+        {title}
+      </h1>
+      {
+        subtitle && (
+          <p class="reveal mt-4 max-w-2xl text-lg text-white/85 lg:text-xl" style="animation-delay:.3s">
+            {subtitle}
+          </p>
+        )
+      }
+      {
+        intro && (
+          <p
+            class="reveal mt-6 max-w-xl text-[15px] leading-relaxed text-white/70"
+            style="animation-delay:.45s"
+            set:html={intro}
+          />
+        )
+      }
+    </div>
+
+    <div class="reveal hero-figure" style="animation-delay:.5s">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .animated-hero {
+    /* Fixed dark ground in both themes: the overlay header is white-on-dark. */
+    background-color: var(--bc-dark);
+  }
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .hero-glow {
+    /* Wider and further left than the token's other uses (ClosingCta,
+       ValuationScan's fill) so it still reaches behind the heading once the
+       grid pattern is gone — a category page with pattern={false} otherwise
+       reads as flat black behind the title, since the old glow only lit the
+       upper-right corner where the illustration already draws the eye. The
+       top scrim is dropped entirely: it was darkening exactly the band the
+       heading sits in, fighting the glow instead of framing it. */
+    background:
+      radial-gradient(85% 100% at 58% 38%, var(--bc-accent-wash-strong), transparent 75%),
+      linear-gradient(to bottom, transparent 0%, transparent 55%, var(--bc-scrim) 100%);
+  }
+  .hero-figure {
+    color: rgb(255 255 255 / 0.82);
+  }
+</style>

@@ -1,0 +1,1509 @@
+@import "tailwindcss";
+
+/* Tailwind v4 auto-detects source files, which means it also scans any
+   parking folder in the project root. A single retired page once left in
+   such a folder was enough to keep `tracking-[0.25em]` — the letter-spacing
+   this audit removed — alive in the shipped stylesheet, because Tailwind
+   scans file *text*, comments included, not just real markup. archive/ (old
+   drafts, backups, retired components) never ships, so it must stay
+   excluded from the scan. */
+@source not "../../archive";
+
+/* Dark mode is an explicit user choice stored in localStorage, not a media
+   query — the site's default is the light theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===========================================================================
+   1. SELF-HOSTED FONTS
+   Served from our own origin, not fonts.googleapis.com. A German site that
+   embeds Google Fonts from Google's CDN transmits visitor IP addresses to a
+   third country on every request, which German courts have treated as a GDPR
+   violation (LG München I, 3 O 17493/20). Self-hosting also removes two
+   third-party connections from the critical path.
+
+   Both faces are variable: one file covers every weight in the type scale, so
+   we never fake a weight by stroking text and never pay for a second file.
+     Manrope  — headings and display. Geometric, slightly condensed, engineered.
+     Inter    — body, UI, navigation, forms. Built for screen text.
+   Latin subset only; the site is German and Latin-1 covers ä ö ü ß.
+=========================================================================== */
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/manrope-latin-variable.woff2") format("woff2-variations");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-latin-variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------------------------------------------------------------------------
+   One special-case display face. NOT part of the type system above — Manrope
+   and Inter still cover every heading, body and UI element on the site. This
+   exists for exactly one hand-picked callout (currently the "150 km"
+   coverage-radius stat on the Gutachten/Ingenieurleistungen/Dienstleistungen
+   pages, rendered as outline/contour text): a geometric sans for that one
+   spot, replacing the earlier poster-weight face (Anton) once the stat moved
+   to an architectural-drawing look — a true geometric construction (perfect
+   circles, even strokes) reads as "technical drawing" the way Anton's
+   condensed poster weight didn't. Self-hosted the same way as Manrope/Inter
+   (OFL-licensed, served from our own origin) — do not reach for it as a
+   general-purpose third typeface; add a different one instead if another
+   spot needs its own special treatment, so this comment stays true.
+     Jost — two static cuts: 800 for the number, 600 italic for the caption
+     and for the dimension figures in the drawing patterns (see 8e)
+     beneath it.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Jost";
+  src: url("/fonts/jost-latin-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Jost";
+  src: url("/fonts/jost-latin-600-italic.woff2") format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ===========================================================================
+   2. DESIGN TOKENS
+   Components reference these, never raw hex. One value, one place.
+
+   TEXT COLOUR — this is a tonal ramp, not black-then-grey. Every step is the
+   same warm neutral hue (the family the brand gold sits in), differing only in
+   lightness. That is what stops the page reading as "heading black, body grey":
+   the text all belongs to one ink, used at four depths. Four steps is the
+   whole system — there is no fifth grey anywhere on the site.
+   Contrast on --bc-page / --bc-surface (WCAG 2.1 AA needs 4.5:1 body, 3:1 large):
+     primary   15.94 / 17.53      secondary 10.54 / 11.59
+     muted      5.37 /  5.90      accent     4.82 /  5.30
+=========================================================================== */
+:root {
+  /* -- Surfaces -- */
+  --bc-page: #ffffff;
+  --bc-surface: #ffffff;
+  --bc-surface-subtle: #f5f5f5; /* section bands, table stripes, inert fills */
+  /* One dark. The footer was #232323 and the page-hero band #23211e — two
+     values a fifth of a percent apart, which is a bug, not a decision. */
+  --bc-dark: #2b2b2b;
+  --bc-footer: var(--bc-dark);
+  /* One step lighter than --bc-footer, for a panel that needs to sit
+     on the dark footer without vanishing into it (e.g. the CTA card). */
+  --bc-footer-panel: #383838;
+
+  /* -- Text ramp -- */
+  /* Warm neutrals, not flat grey — same tone as --bc-dark/--bc-accent, just
+     four steps of brightness. Matches design-system.md's documented ramp
+     and contrast figures (15.9 / 10.5 / 5.4 against --bc-page); a plain
+     grey here was a drift from that, not a deliberate change. */
+  --bc-ink: #1b1917; /* H1–H3, the dominant voice */
+  --bc-ink-secondary: #3d3833; /* body copy, list text — the default reading tone */
+  --bc-ink-muted: #6b635a; /* captions, meta, legal — used sparingly */
+  --bc-ink-inverse: #ffffff; /* on --bc-footer and dark bands */
+
+  /* Kept as aliases so existing markup keeps compiling; both now resolve into
+     the ramp above instead of being two more unrelated greys. */
+  --bc-muted: var(--bc-ink-secondary);
+  --bc-subtle: var(--bc-ink-muted);
+
+  /* -- Borders -- */
+  --bc-border: rgb(56 56 56 / 0.12); /* default hairline */
+  --bc-border-strong: rgb(56 56 56 / 0.22); /* hover, active, emphasis */
+
+  /* -- Brand -- */
+  /* Gold for TEXT on light surfaces. The brand gold only reaches 2.4:1 here,
+     so headings, links and eyebrows use this darker tone of the same hue. */
+  --bc-accent: #8a6520;
+  /* Filled buttons: the brand gold exactly as specified by the client. The
+     label on it is --bc-ink (6.73:1, passes AA); white would be 2.6:1. */
+  --bc-accent-solid: #c39a53;
+  --bc-accent-solid-hover: #b5883b;
+  /* Brand gold, decorative only — rules, bars, seals. Never for text. */
+  --bc-accent-deco: #c39a53;
+  --bc-accent-wash: rgb(195 154 83 / 0.14); /* tinted fills, focus rings */
+  --bc-accent-wash-strong: rgb(195 154 83 / 0.18); /* the hero's gold bloom */
+  /* Scrims over photography, so a headline stays readable on any image. */
+  --bc-scrim: rgb(20 18 14 / 0.55);
+  --bc-scrim-soft: rgb(20 18 14 / 0.35);
+  /* One blue, used only as a section accent (price-card band). There were
+     three — #3282b8, #2f6f97, #255a7b — none of which was a token. */
+  --bc-blue: #3282b8;
+  --bc-blue-hover: #2a6d9c;
+  /* The deep gold pair behind the trust band's gradient. */
+  --bc-gold-deep: #2b2417;
+  --bc-gold-mid: #6e5630;
+  --bc-danger: #b91c1c; /* form validation only */
+
+  /* Deliberate one-off: three pastel plan-card backgrounds, requested by the
+     office against a specific reference (lavender / cream / sky-blue), used
+     nowhere else on the site. Not part of the core palette — do not reuse
+     for anything but the three PriceCards panels. Dark mode redefines these
+     three with darker, desaturated counterparts — see the .dark block. */
+  --bc-plan-1: #e7e1f7;
+  --bc-plan-2: #f5e8c7;
+  --bc-plan-3: #d8eaf4;
+
+  /* -- Radius: crisp and architectural. 2px is the house value; the site is
+     about surveying and engineering, not consumer apps. Pills exist only for
+     genuinely circular controls (slider arrows, progress track). -- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* -- Spacing scale. Every gap on the site is one of these. -- */
+  --space-2xs: 0.25rem; /*  4 */
+  --space-xs: 0.5rem; /*  8 */
+  --space-sm: 0.75rem; /* 12 */
+  --space-md: 1rem; /* 16 */
+  --space-lg: 1.5rem; /* 24 */
+  --space-xl: 2rem; /* 32 */
+  --space-2xl: 3rem; /* 48 */
+  --space-3xl: 4rem; /* 64 */
+  --space-4xl: 5rem; /* 80 */
+  --space-5xl: 6rem; /* 96 */
+  --space-6xl: 7.5rem; /* 120 */
+
+  /* -- Motion. Two durations, one easing. Nothing bounces, nothing scales. -- */
+  --transition-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -- Depth. Premium restraint: borders carry structure, shadows only lift
+     something that is genuinely floating. -- */
+  --shadow-sm: 0 1px 2px rgb(27 25 23 / 0.05);
+  --shadow-md: 0 4px 16px -4px rgb(27 25 23 / 0.10);
+
+  /* One glass recipe, used by both the scrolled header bar and the
+     Leistungen dropdown panel, so they are structurally the same
+     surface, not two numbers tuned to look similar. Change it once,
+     both update. --bc-surface already flips per theme, so this does
+     too without a second declaration in .dark. */
+  --bc-glass-blur: blur(16px) saturate(150%);
+  --bc-glass-bg: color-mix(in srgb, var(--bc-surface) 88%, transparent);
+
+  color-scheme: light;
+}
+
+.dark {
+  --bc-page: #2b2b2b;
+  --bc-surface: #383838;
+  --bc-surface-subtle: #323232;
+
+  --bc-ink: #f7f6f4; /* 13.11 on page */
+  --bc-ink-secondary: #cfc9c1; /*  8.62 on page */
+  --bc-ink-muted: #b0a89e; /*  6.03 on page, 4.99 on surface */
+  --bc-ink-inverse: #2b2b2b;
+  --bc-muted: var(--bc-ink-secondary);
+  --bc-subtle: var(--bc-ink-muted);
+
+  --bc-border: rgb(255 255 255 / 0.14);
+  --bc-border-strong: rgb(255 255 255 / 0.26);
+
+  /* On a dark ground the brand gold is legible (5.4:1) — use it as-is. */
+  --bc-accent: #c39a53;
+  --bc-accent-solid: #c39a53;
+  --bc-accent-solid-hover: #d1ab66;
+  --bc-accent-deco: #c39a53;
+  --bc-accent-wash: rgb(195 154 83 / 0.16);
+  --bc-accent-wash-strong: rgb(195 154 83 / 0.22);
+  --bc-danger: #f87171;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.45);
+
+  /* Dark counterparts of the three pastel plan-card backgrounds. The light
+     values are unusable as-is on this theme: --bc-ink flips to near-white
+     (#f7f6f4), so on the original light lavender/cream/sky-blue it would sit
+     at ~1.2:1 contrast — nearly invisible. These keep the same three hues,
+     darkened and desaturated to roughly the same depth as --bc-surface, so
+     the near-white ink text reads clearly again (9+:1) and the cards still
+     read as three distinct, gently tinted panels rather than a bright patch
+     dropped onto a dark page. */
+  --bc-plan-1: #453c5c;
+  --bc-plan-2: #4d4327;
+  --bc-plan-3: #2e4652;
+
+  color-scheme: dark;
+}
+
+/* Expose the tokens to Tailwind so `text-ink`, `rounded-sm`, `bg-surface`
+   etc. resolve to the same values the hand-written CSS below uses. */
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-page: var(--bc-page);
+  --color-surface: var(--bc-surface);
+  --color-surface-subtle: var(--bc-surface-subtle);
+  --color-ink: var(--bc-ink);
+  --color-secondary: var(--bc-ink-secondary);
+  --color-muted: var(--bc-ink-secondary);
+  --color-subtle: var(--bc-ink-muted);
+  --color-inverse: var(--bc-ink-inverse);
+  --color-accent: var(--bc-accent);
+  --color-accent-solid: var(--bc-accent-solid);
+  --color-accent-deco: var(--bc-accent-deco);
+  --color-line: var(--bc-border);
+  --color-line-strong: var(--bc-border-strong);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+}
+
+/* ===========================================================================
+   3. BASE TYPOGRAPHY
+   Headings are Manrope, body is Inter. Optical sizing rules: large type needs
+   negative tracking to stop it looking loose, small type needs none. That is
+   the only letter-spacing on the site — there is no positive tracking outside
+   the single eyebrow rule, which needs it because uppercase at 11px is
+   genuinely unreadable without it.
+=========================================================================== */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bc-page);
+  color: var(--bc-ink-secondary);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+  font-feature-settings: "cv05" 1; /* single-storey l, disambiguates Il1 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* no single element may force a horizontal scrollbar */
+}
+
+/* Tailwind v4's preflight resets <button> to the browser default cursor
+   (arrow, not hand) — correct for a plain <button> used as a form control,
+   wrong for the ones here, which all act like links: the header's Leistungen
+   toggle, the mobile menu, the PDF lightbox close, the services-slider arrows.
+   One rule restores the hand cursor on every enabled button site-wide instead
+   of repeating `cursor-pointer` on each one. */
+button:not(:disabled):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display {
+    font-family: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+    color: var(--bc-ink);
+    text-wrap: balance; /* no orphaned last word in a headline */
+    /* German compounds ("Immobilienbewertung", "Flächenberechnungen") are
+       routinely wider than a phone screen. The browser hyphenates them at a
+       legal break point using the document's lang="de"; overflow-wrap is the
+       backstop for the rare engine without a German dictionary. Neither does
+       anything at all while a heading still fits on its line. */
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Weights match the documented scale in design-system.md — H1 800, H2 700,
+   H3 700, H4 600 — not the lighter 600/500/400/400 this drifted to. Manrope
+   is a variable font up to weight 800, which is why H1 sits at the ceiling
+   rather than reaching for a heavier static cut. */
+h1 {
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+}
+h3 {
+  font-weight: 700;
+  line-height: 1.26;
+  letter-spacing: -0.01em;
+}
+h4 {
+  font-weight: 600;
+  line-height: 1.34;
+  letter-spacing: -0.005em;
+}
+h5,
+h6 {
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Footer and sidebar column headings. These are labels, not section headings —
+   small, 600, with the gold underline the footer already used. Declaring the
+   treatment here is what keeps it from reading as an <h3> that lost an argument
+   with a utility class. */
+.bc-column-heading {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  margin-bottom: var(--space-md);
+  text-decoration: underline;
+  text-decoration-color: var(--bc-accent-deco);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.5rem;
+}
+
+/* Tabular figures wherever numbers are compared down a column — prices, key
+   figures, years. Proportional digits make a column of numbers look ragged. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===========================================================================
+   4. LAYOUT RHYTHM
+   Section padding is one of three values, chosen by the section's weight in
+   the page, and it scales with the viewport rather than snapping at a
+   breakpoint. This is what makes inner pages feel like the homepage.
+=========================================================================== */
+/* Trimmed ~20% from all three steps (was 4/7vw/6.5rem etc.) — the gap
+   between sections read as too generous at the old scale. */
+.bc-section {
+  padding-block: clamp(3.25rem, 5.5vw, 5.5rem);
+}
+.bc-section-lg {
+  padding-block: clamp(4rem, 7vw, 7rem);
+}
+.bc-section-sm {
+  padding-block: clamp(2rem, 4vw, 3.25rem);
+}
+
+/* Page title in both hero components (PageHero, AnimatedPageHero). The size
+   is fluid below the sm breakpoint rather than a fixed 38px, because that is
+   where a long single-word title used to run past the right edge of a phone;
+   from sm upwards it returns to the fixed steps the design uses elsewhere.
+   Hyphenation comes from the heading rule above. */
+.bc-hero-title {
+  font-size: clamp(1.875rem, 7.6vw, 2.375rem); /* 30px → 38px */
+  line-height: 1.05;
+}
+@media (min-width: 640px) {
+  .bc-hero-title {
+    font-size: 3rem; /* 48px */
+  }
+}
+@media (min-width: 1024px) {
+  .bc-hero-title {
+    font-size: 4rem; /* 64px */
+  }
+}
+
+/* Standard measure for reading text. Anything wider stops being readable. */
+.bc-measure {
+  max-width: 68ch;
+}
+
+/* The gap between a section header block and the content it introduces. */
+.bc-header-gap {
+  margin-bottom: clamp(2.5rem, 4vw, 4rem);
+}
+
+/* ===========================================================================
+   5. EYEBROW
+   The old treatment was 12px uppercase at 0.25em tracking — the single most
+   recognisable "generated landing page" tell on the site, used 33 times. This
+   replaces it: smaller, heavier, nearly natural tracking, and anchored by a
+   short gold rule so it reads as a label belonging to the heading beneath it
+   rather than as a floating second title.
+   0.04em is kept because uppercase at 11px genuinely needs it; that is the
+   only positive letter-spacing in the stylesheet.
+=========================================================================== */
+.bc-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bc-accent);
+  margin-bottom: var(--space-md);
+}
+.bc-eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 2px;
+  flex: none;
+  background: var(--bc-accent-deco);
+}
+/* The eyebrow owns the gap to the heading beneath it. Several sections also
+   carried an mt-3 on that heading, which doubled the space and made the label
+   float away from the title it belongs to. This settles it in one place. */
+.bc-eyebrow + h1,
+.bc-eyebrow + h2,
+.bc-eyebrow + h3,
+.bc-eyebrow + h4 {
+  margin-top: 0;
+}
+
+/* Centred section headers need the rule on both sides or it looks broken. */
+.bc-eyebrow-center {
+  justify-content: center;
+}
+.bc-eyebrow-center::after {
+  content: "";
+  width: 1.5rem;
+  height: 2px;
+  flex: none;
+  background: var(--bc-accent-deco);
+}
+
+/* ===========================================================================
+   INLINE DIVIDER
+   A thin vertical rule between short phrases on one line — Hero's
+   service-family list, PageHero subtitles, small captions like opening
+   hours. Sized in em so it scales with the surrounding text and coloured
+   from currentColor so it always matches (dimmed) whatever text it sits in.
+   Replaces the plain "·" middot used earlier for the same purpose.
+=========================================================================== */
+.bc-divider {
+  display: inline-block;
+  width: 1px;
+  height: 0.75em;
+  margin: 0 0.6em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  opacity: 0.3;
+}
+
+/* ===========================================================================
+   6. BUTTONS
+   One family, three variants. Identical height, radius, type, padding,
+   transition and focus ring; only the fill changes. Every CTA carries the same
+   arrow, always last, always the same size — see Button.astro, which is the
+   only place a CTA should be built.
+=========================================================================== */
+.bc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 3.25rem; /* 52px — every variant, every breakpoint */
+  padding-inline: var(--space-lg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* The arrow. Same box, same stroke, same nudge on hover, in every button. */
+.bc-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  transition: transform var(--transition-fast);
+}
+.bc-btn:hover svg {
+  transform: translateX(2px);
+}
+
+.bc-btn-primary {
+  background: var(--bc-accent-solid);
+  /* Dark label, not the white the brand direction first called for: white
+     on #c39a53 measures 2.60:1, well under WCAG AA's 4.5:1 minimum for
+     normal text. #1b1917 on the same gold measures 6.73:1.
+     Deliberately NOT var(--bc-ink): --bc-accent-solid stays the same gold in
+     both themes (see the dark-theme block below), but --bc-ink flips to a
+     near-white #f7f6f4 in dark mode — which on this same gold measures only
+     2.41:1, worse than the white it would replace. The label has to stay
+     dark on this button regardless of theme, so the value is fixed rather
+     than themed. */
+  color: #1b1917;
+}
+.bc-btn-primary:hover {
+  background: var(--bc-accent-solid-hover);
+}
+
+.bc-btn-secondary {
+  background: transparent;
+  border-color: var(--bc-border-strong);
+  color: var(--bc-ink);
+}
+.bc-btn-secondary:hover {
+  border-color: var(--bc-accent-solid);
+  background: var(--bc-accent-wash);
+}
+
+.bc-btn-ghost {
+  background: transparent;
+  padding-inline: 0;
+  min-height: auto;
+  color: var(--bc-accent);
+}
+.bc-btn-ghost:hover {
+  color: var(--bc-ink);
+}
+
+/* On a dark band the secondary button inverts, keeping the same geometry. */
+.bc-btn-on-dark.bc-btn-secondary {
+  border-color: rgb(255 255 255 / 0.28);
+  color: #fff;
+}
+.bc-btn-on-dark.bc-btn-secondary:hover {
+  border-color: var(--bc-accent-solid);
+  background: rgb(195 154 83 / 0.16);
+}
+
+/* Same idea for the ghost variant: on a dark band its resting colour must
+   stay the fixed, always-legible gold rather than the theme-dependent text
+   gold (which is tuned for reading on a light page, and turns dull on a
+   photo). Hover still resolves via an explicit override on the element. */
+.bc-btn-on-dark.bc-btn-ghost {
+  color: var(--bc-accent-deco);
+}
+
+.bc-btn:disabled,
+.bc-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.bc-btn:disabled:hover svg {
+  transform: none;
+}
+
+/* Full-width only where the container genuinely calls for it (form submit,
+   mobile menu) — never as a per-button decision. */
+.bc-btn-block {
+  width: 100%;
+}
+
+/* For a button that has to live in a column narrower than its label — two
+   CTAs sharing a row on a phone. The label wraps instead of overflowing, so
+   line-height 1 (which is what keeps single-line buttons optically centred)
+   is relaxed and the box grows downwards. Grid stretches its siblings to the
+   same height, which is the whole point of using it there. */
+.bc-btn-wrap {
+  padding-inline: var(--space-md);
+  padding-block: var(--space-xs);
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+}
+@media (min-width: 640px) {
+  .bc-btn-wrap {
+    padding-inline: var(--space-lg);
+    line-height: 1;
+  }
+}
+
+/* ===========================================================================
+   7. CARDS
+   Structure comes from a hairline border, not a drop shadow. On hover the
+   border tightens rather than the card lifting — restrained, and it does not
+   cause the 1px reflow that scaling does.
+=========================================================================== */
+.bc-card {
+  background: var(--bc-surface);
+  border: 1px solid var(--bc-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xl);
+  transition:
+    border-color var(--transition-normal),
+    background-color var(--transition-normal);
+}
+.bc-card-hover:hover {
+  border-color: var(--bc-border-strong);
+}
+.bc-card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ===========================================================================
+   8. FORMS
+   Inputs share the button's height, radius, border and focus treatment, so the
+   contact form reads as part of the site rather than an embedded plugin.
+=========================================================================== */
+.bc-label {
+  display: block;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--bc-ink);
+  margin-bottom: var(--space-xs);
+}
+
+.bc-input {
+  display: block;
+  width: 100%;
+  min-height: 3.25rem; /* matches .bc-btn exactly */
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bc-surface);
+  border: 1px solid var(--bc-border-strong);
+  border-radius: var(--radius-sm);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--bc-ink);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+.bc-input::placeholder {
+  color: var(--bc-ink-muted);
+  opacity: 1; /* Firefox dims placeholders by default */
+}
+.bc-input:focus {
+  outline: none;
+  border-color: var(--bc-accent-solid);
+  box-shadow: 0 0 0 3px var(--bc-accent-wash);
+}
+.bc-input:user-invalid {
+  border-color: var(--bc-danger);
+}
+textarea.bc-input {
+  min-height: 9rem;
+  resize: vertical;
+}
+select.bc-input {
+  appearance: none;
+  padding-right: var(--space-2xl);
+}
+
+.bc-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--bc-ink-muted);
+  margin-top: var(--space-2xs);
+}
+.bc-error {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--bc-danger);
+  margin-top: var(--space-2xs);
+}
+
+/* ===========================================================================
+   8b. ACCORDION (FAQ)
+   The reference block paints the open item with a tinted ground and separates
+   items by nothing at all — no borders, no dividers. That restraint is the
+   whole look, so it is kept exactly; only the radius, colours and motion are
+   translated into this site's tokens (2px, not the source's 12px).
+=========================================================================== */
+.bc-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.bc-accordion__item {
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-normal);
+}
+.bc-accordion__item[data-open] {
+  background-color: var(--bc-surface-subtle);
+}
+
+/* The question is a heading for structure and a button for behaviour. The
+   heading carries no visual weight of its own — the button inside does. */
+.bc-accordion__heading {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.bc-accordion__toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  width: 100%;
+  /* 1.25rem = the site gutter (px-5). The accordion is pulled out by exactly
+     this much, so the question text lands on the same line as the heading
+     above it and the tinted ground stops at the page edge, not past it. */
+  padding: var(--space-md) 1.25rem;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-family: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  text-align: left;
+  color: var(--bc-ink);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+@media (min-width: 1024px) {
+  .bc-accordion__toggle {
+    font-size: 1.0625rem; /* 17px */
+    padding: var(--space-md) var(--space-xl); /* matches lg:px-8 */
+  }
+}
+.bc-accordion__toggle:hover {
+  color: var(--bc-accent);
+}
+
+/* One icon, rotated — not a second chevron swapped in. The site has a single
+   icon set, and a 180° turn is the same glyph pointing the other way. */
+.bc-accordion__chevron {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  margin-top: 0.125rem;
+  color: var(--bc-ink-muted);
+  transition:
+    transform var(--transition-normal),
+    color var(--transition-fast);
+}
+.bc-accordion__item[data-open] .bc-accordion__chevron {
+  transform: rotate(180deg);
+  color: var(--bc-accent);
+}
+
+/* Closed panels are removed from layout, not merely collapsed, so assistive
+   technology does not read answers the visitor has not opened. */
+.bc-accordion__panel {
+  display: none;
+}
+.bc-accordion__item[data-open] > .bc-accordion__panel {
+  display: block;
+}
+/* Without JavaScript nothing toggles `data-open`, so every answer is shown. */
+.no-js .bc-accordion__panel {
+  display: block;
+}
+
+.bc-accordion__answer {
+  padding: 0 1.25rem var(--space-md);
+  color: var(--bc-ink-secondary);
+}
+@media (min-width: 1024px) {
+  .bc-accordion__answer {
+    padding: 0 var(--space-xl) var(--space-lg);
+    /* The answer keeps clear of the chevron column so the text block lines up
+       with the question above it rather than running under the icon. */
+    padding-right: calc(var(--space-xl) + 2.75rem);
+  }
+}
+.bc-accordion__answer p {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.bc-accordion__answer p + p {
+  margin-top: var(--space-md);
+}
+
+/* ===========================================================================
+   8b2. LEGAL ACCORDION (Impressum / Datenschutzerklärung)
+   Same visual language as the FAQ accordion above (tinted ground, one
+   rotating chevron, closed panels removed from layout) but every item opens
+   independently — see LegalAccordion.astro for why. Sits inside a two-column
+   grid on desktop (.bc-legal-grid) so a long Datenschutzerklärung reads as a
+   reference document instead of one long scroll.
+=========================================================================== */
+.bc-legal-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.bc-legal-accordion__item {
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-normal);
+}
+.bc-legal-accordion__item[data-open] {
+  background-color: var(--bc-surface-subtle);
+}
+
+/* Beats .bc-prose h2 (class+tag, higher specificity) on purpose: the
+   heading here carries no visual weight of its own, the button inside does. */
+.bc-prose .bc-legal-accordion__heading,
+.bc-legal-accordion__heading {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  scroll-margin-top: 6rem;
+}
+
+.bc-legal-accordion__toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  text-align: left;
+  color: var(--bc-ink);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.bc-legal-accordion__toggle:hover {
+  color: var(--bc-accent);
+}
+
+.bc-legal-accordion__chevron {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  margin-top: 0.1875rem;
+  color: var(--bc-ink-muted);
+  transition:
+    transform var(--transition-normal),
+    color var(--transition-fast);
+}
+.bc-legal-accordion__item[data-open] .bc-legal-accordion__chevron {
+  transform: rotate(180deg);
+  color: var(--bc-accent);
+}
+
+.bc-legal-accordion__panel {
+  display: none;
+}
+.bc-legal-accordion__item[data-open] > .bc-legal-accordion__panel {
+  display: block;
+}
+.no-js .bc-legal-accordion__panel {
+  display: block;
+}
+
+.bc-legal-accordion__body {
+  padding: 0 var(--space-md) var(--space-md);
+  color: var(--bc-ink-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.bc-legal-accordion__body > * + * {
+  margin-top: 1em;
+}
+
+/* Static (non-collapsible) callouts inside the legal pages — contact block,
+   the "Stand" date. Same tinted-ground language as an open accordion item so
+   the two read as one family, but there is no button and nothing to toggle:
+   this content matters every time, so it is never allowed to be hidden. */
+.bc-legal-static {
+  background-color: var(--bc-surface-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+}
+
+/* Two-column layout for the legal pages on wide screens. Each accordion item
+   can break across the column boundary like any block, so this is a plain
+   balanced multi-column flow rather than a CSS grid that would force equal
+   left/right item counts regardless of each section's length. */
+.bc-legal-grid {
+  column-count: 1;
+  column-gap: var(--space-2xl);
+}
+@media (min-width: 1024px) {
+  .bc-legal-grid {
+    column-count: 2;
+  }
+  .bc-legal-grid > * {
+    break-inside: avoid;
+    margin-bottom: var(--space-2xs);
+  }
+}
+
+/* ===========================================================================
+   8c. FAQ CATEGORY NAVIGATION
+   The overview page pairs a persistent category list with the accordion stack.
+   Every category is a real section with a real anchor, so the nav works as
+   plain links before any script runs and each category is linkable on its own.
+=========================================================================== */
+.bc-faq-nav {
+  position: sticky;
+  top: 7rem;
+}
+.bc-faq-nav__group + .bc-faq-nav__group {
+  margin-top: var(--space-lg);
+}
+.bc-faq-nav__group-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bc-ink-muted);
+  margin: 0 0 var(--space-sm);
+}
+.bc-faq-nav__link {
+  display: block;
+  padding: var(--space-xs) 0 var(--space-xs) var(--space-md);
+  border-left: 2px solid var(--bc-border);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--bc-ink-secondary);
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.bc-faq-nav__link:hover {
+  color: var(--bc-ink);
+  border-left-color: var(--bc-border-strong);
+}
+/* Scroll-spy state, set by site.js. Subtle and professional: the rule turns
+   gold and the label darkens — nothing fills, nothing shifts. */
+.bc-faq-nav__link[aria-current="true"] {
+  color: var(--bc-ink);
+  border-left-color: var(--bc-accent-solid);
+}
+
+/* Mobile: the same links become a horizontally scrollable chip row. */
+.bc-faq-chips {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  padding-bottom: var(--space-xs);
+}
+.bc-faq-chip {
+  flex: none;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--bc-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--bc-ink-secondary);
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+.bc-faq-chip[aria-current="true"] {
+  color: var(--bc-ink);
+  border-color: var(--bc-accent-solid);
+  background-color: var(--bc-accent-wash);
+}
+
+/* ===========================================================================
+   8d. VERTICAL FEATURE TABS
+   Adapted from Preline's "vertical feature tabs with overlapping panel"
+   (marketing/content-navigation) — a vertical tab list beside one panel that
+   overlaps a tinted background block. Same departures as the accordion
+   above: no Preline runtime (the exclusive-open behaviour is a dozen lines
+   in site.js), radius from this project's scale (4px, not the source's
+   12px), and structure from a hairline border instead of a shadow. The
+   source panel is a single stock photo per tab; this one holds the client's
+   own paragraph copy — there is no photography for this section yet, and
+   inventing stock imagery would be worse than doing without.
+=========================================================================== */
+.bc-vtabs {
+  position: relative;
+  padding: var(--space-lg);
+}
+@media (min-width: 768px) {
+  .bc-vtabs {
+    padding: var(--space-3xl);
+  }
+}
+
+/* The tinted block behind the grid, offset from both columns so it reads as
+   a layer rather than a fill. Same 12-column math as the source, translated
+   from bg-layer/rounded-xl to this project's surface token and radius. */
+.bc-vtabs__backdrop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.bc-vtabs__backdrop::before {
+  content: "";
+  grid-column: 1 / -1;
+  height: 83.3333%;
+  border-radius: var(--radius-md);
+  background-color: var(--bc-surface-subtle);
+}
+@media (min-width: 640px) {
+  .bc-vtabs__backdrop::before {
+    height: 75%;
+  }
+}
+@media (min-width: 1024px) {
+  .bc-vtabs__backdrop::before {
+    grid-column: 6 / 13;
+    height: 100%;
+  }
+}
+
+.bc-vtabs__grid {
+  position: relative;
+  z-index: 1;
+}
+@media (min-width: 1024px) {
+  .bc-vtabs__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: center;
+    gap: var(--space-2xl);
+  }
+}
+
+.bc-vtabs__intro {
+  margin-bottom: var(--space-2xl);
+}
+@media (min-width: 1024px) {
+  .bc-vtabs__intro {
+    /* 5 of 12 columns, ending exactly on the grid's right edge — was
+       8/span 6, which spilled one column past the explicit template. */
+    grid-column: 8 / span 5;
+    order: 2;
+    margin-bottom: 0;
+  }
+}
+
+.bc-vtabs__nav {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+@media (min-width: 768px) {
+  .bc-vtabs__nav {
+    margin-top: var(--space-2xl);
+  }
+}
+
+.bc-vtabs__tab {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+@media (min-width: 768px) {
+  .bc-vtabs__tab {
+    padding: var(--space-lg);
+  }
+}
+.bc-vtabs__tab:hover {
+  background-color: var(--bc-surface-subtle);
+}
+.bc-vtabs__tab[data-open] {
+  background-color: var(--bc-surface);
+}
+
+.bc-vtabs__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  margin-top: 0.125rem;
+  color: var(--bc-ink-muted);
+  transition: color var(--transition-fast);
+}
+@media (min-width: 768px) {
+  .bc-vtabs__icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+.bc-vtabs__tab[data-open] .bc-vtabs__icon {
+  color: var(--bc-accent);
+}
+
+.bc-vtabs__title {
+  padding-top: 0.125rem;
+  font-family: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--bc-ink);
+  transition: color var(--transition-fast);
+}
+.bc-vtabs__tab[data-open] .bc-vtabs__title {
+  color: var(--bc-accent);
+}
+
+.bc-vtabs__panels {
+  position: relative;
+  display: grid;
+}
+@media (min-width: 1024px) {
+  .bc-vtabs__panels {
+    /* 7 of 12 columns — wider than the source's image column (6) so the
+       client's real paragraph text reads comfortably. Explicit column is
+       required: without it this grid item auto-places into a single
+       1/12-width track and the text wraps one word per line. */
+    grid-column: 1 / span 7;
+  }
+}
+
+/* All panels sit in the same grid cell, so the stack's height is set by the
+   tallest one and does not jump when the open tab changes — the inactive
+   panels are still measured for that height, just not painted or
+   hit-testable (visibility, not display:none). */
+.bc-vtabs__panel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  background-color: var(--bc-surface);
+  color: var(--bc-ink-secondary);
+  transition: opacity var(--transition-normal);
+}
+@media (min-width: 768px) {
+  .bc-vtabs__panel {
+    padding: var(--space-xl);
+  }
+}
+.bc-vtabs__panel[data-open] {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Without JavaScript nothing toggles data-open, so every panel is shown,
+   stacked in normal flow instead of overlapping — same reasoning as the
+   accordion's .no-js fallback. */
+.no-js .bc-vtabs__panels {
+  display: block;
+}
+.no-js .bc-vtabs__panel {
+  position: static;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+.no-js .bc-vtabs__panel + .bc-vtabs__panel {
+  margin-top: var(--space-md);
+}
+.bc-vtabs__panel p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.bc-vtabs__panel p + p {
+  margin-top: var(--space-md);
+}
+
+/* Decorative mark: an architect's square with a graduation tick, in place
+   of the source's plain squiggle — same stroke weight and three-stroke
+   count, but a shape that actually reads as measurement/drafting for a
+   Bauingenieur's site. Colour mapped to the brand's gold accent, hidden
+   below md like the source. */
+.bc-vtabs__mark {
+  display: none;
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  width: 4rem;
+  height: auto;
+  color: var(--bc-accent-deco);
+  transform: translateX(2.5rem);
+}
+@media (min-width: 768px) {
+  .bc-vtabs__mark {
+    display: block;
+  }
+}
+
+/* ===========================================================================
+   8e. DRAWING PATTERNS
+   The three decorative patterns that sit behind a band heading — StepElevation
+   (elevation view), SurveyContour (site survey), FloorPlanLines (plan view) —
+   share this wrapper.
+
+   The line work is one SVG stretched to the band's width
+   (preserveAspectRatio="none"), which would squash any <text> inside it out of
+   shape. So the dimension figures are HTML instead, positioned in percentages:
+   both coordinate systems are proportional to the same box, so a label stays
+   sitting on its dimension line at every viewport width.
+
+   The pattern is a background. It is painted before the band's content (which
+   carries z-10) and never over it.
+=========================================================================== */
+.bc-pattern {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+.bc-pattern__svg {
+  width: 100%;
+  height: 100%;
+}
+/* Dimension figures: the same geometric face the 150 km stat uses, at caption
+   size. Italic because that is how a drawing letters its dimensions. */
+.bc-pattern__dim {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: "Jost", "Manrope", sans-serif;
+  font-size: 0.75rem; /* 12px */
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--bc-ink-muted);
+  opacity: 0.72;
+}
+
+/* ===========================================================================
+   9. ACCESSIBILITY
+=========================================================================== */
+
+/* Keyboard focus must always be visible. :focus-visible keeps the ring away
+   from mouse users while guaranteeing it for keyboard and switch users. */
+:focus-visible {
+  outline: 3px solid var(--bc-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+/* Inputs draw their own focus treatment above; suppress the doubled ring. */
+.bc-input:focus-visible {
+  outline: none;
+}
+
+/* Skip link — the first tab stop on every page, so keyboard and screen-reader
+   users can bypass the navigation instead of tabbing through it on each page. */
+.skip-link {
+  /* fixed, not absolute: the link must appear in the viewport regardless of
+     scroll position or which ancestor happens to be positioned. */
+  position: fixed;
+  left: var(--space-sm);
+  top: -6rem;
+  z-index: 100;
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--bc-accent);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: top var(--transition-fast);
+}
+.skip-link:focus {
+  top: var(--space-sm);
+}
+
+/* The header is fixed, so anything jumped to by id — the skip link's target,
+   an anchor such as #leistungen — would otherwise land underneath it.
+
+   This sits in @layer base on purpose. Unlayered CSS beats every layered
+   Tailwind utility, so as a plain rule it silently overrode `scroll-mt-*`
+   everywhere on the site: a section that asked for a larger offset still got
+   6.5rem and still landed under the header. In the base layer it is a default
+   that a utility can raise, which is what it was always meant to be. */
+@layer base {
+  [id] {
+    scroll-margin-top: 6.5rem;
+  }
+}
+
+/* Visually hidden but available to assistive technology. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Honour the OS "reduce motion" setting: animation is decoration here, never
+   information, so removing it costs the user nothing. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===========================================================================
+   10. MOTION
+   Above-the-fold reveal: the hero headline is the Largest Contentful Paint
+   element. A CSS animation runs as soon as the stylesheet is parsed, so the
+   prerendered text paints immediately.
+=========================================================================== */
+.reveal {
+  animation: bc-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.reveal-line {
+  animation: bc-reveal-line 0.8s ease-in-out both;
+  transform-origin: center;
+}
+@keyframes bc-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bc-reveal-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* Scroll hint: a continuous nudge, in CSS so it needs no JavaScript. */
+.bc-bounce {
+  animation: bc-bounce 1.6s ease-in-out infinite;
+}
+@keyframes bc-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-line,
+  .bc-bounce {
+    animation: none;
+  }
+}
+
+/* Scroll reveals. Elements below the fold start dimmed and slide in when they
+   enter the viewport; the class is added by an IntersectionObserver in
+   site.js. The content is fully present in the HTML either way, and a visitor
+   without JavaScript sees everything at full opacity (see the .no-js guard). */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.no-js .reveal-on-scroll {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Slider track: hide the scrollbar chrome, keep the scrolling behaviour. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Light/dark switch, "switch" variant of ThemeToggle.astro — a track-and-
+   thumb control for a fixed-dark surface (the footer, which stays dark in
+   both site themes). Fixed white-on-dark values, not theme tokens: the
+   footer itself never repaints for --bc-* light/dark, so this shouldn't
+   either — same reasoning as the rest of the footer's hardcoded whites. */
+.bc-theme-switch {
+  --bc-switch-w: 2.75rem; /* 44px track */
+  --bc-switch-h: 1.5rem; /* 24px track */
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  width: var(--bc-switch-w);
+  height: var(--bc-switch-h);
+  padding: 0.1875rem; /* 3px */
+  border-radius: var(--radius-full);
+  border: 1px solid rgb(255 255 255 / 0.24);
+  background: rgb(255 255 255 / 0.1);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.bc-theme-switch:hover {
+  border-color: rgb(255 255 255 / 0.4);
+}
+.bc-theme-switch[aria-pressed="true"] {
+  background: var(--bc-accent-solid);
+  border-color: var(--bc-accent-solid);
+}
+.bc-theme-switch__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--bc-switch-h) - 0.375rem);
+  height: calc(var(--bc-switch-h) - 0.375rem);
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--bc-dark);
+  transition: transform var(--transition-normal);
+}
+.bc-theme-switch[aria-pressed="true"] .bc-theme-switch__thumb {
+  transform: translateX(calc(var(--bc-switch-w) - var(--bc-switch-h)));
+}
+

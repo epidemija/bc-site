@@ -1,0 +1,112 @@
+---
+/**
+ * Statement section: the standard every report is held to.
+ *
+ * The mosaic behind the text is decoration. It renders as empty cells in the
+ * HTML and is filled in by the client script — 50 decorative images have no
+ * business inflating the document that every crawler downloads. The heading,
+ * the figure and the copy are real text.
+ */
+import { getImage } from "astro:assets";
+import Icon from "../ui/Icon.astro";
+import { routes } from "../../config/site";
+import { SERVICES } from "../../config/services";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+import Button from "../ui/Button.astro";
+
+const COLS = [
+  { width: 78, itemH: 118, offset: "mt-[120px]" },
+  { width: 105, itemH: 158, offset: "mt-[40px]" },
+  { width: 120, itemH: 182, offset: "-mt-[40px]" },
+  { width: 120, itemH: 182, offset: "-mt-[40px]" },
+  { width: 120, itemH: 182, offset: "-mt-[40px]", plain: true },
+  { width: 120, itemH: 182, offset: "-mt-[40px]", plain: true },
+  { width: 120, itemH: 182, offset: "-mt-[40px]" },
+  { width: 120, itemH: 182, offset: "-mt-[40px]" },
+  { width: 105, itemH: 158, offset: "mt-[40px]" },
+  { width: 78, itemH: 118, offset: "mt-[120px]" },
+];
+const ITEMS_PER_COL = 5;
+
+// Small tile derivatives, resolved at build time and handed to the client
+// script as a JSON list so it can shuffle them without any framework.
+const tileSources = await Promise.all(
+  [heroImage, ...SERVICES.map((s) => s.img)].map(async (img) => {
+    const webp = await getImage({ src: img, width: 280, format: "webp", quality: 80 });
+    return { src: webp.src };
+  })
+);
+---
+
+<section
+  class="sticky top-0 z-0 h-[105vh] overflow-hidden bg-gradient-to-b from-[color:var(--bc-gold-deep)] to-[color:var(--bc-gold-mid)]"
+  aria-labelledby="anspruch-titel"
+>
+  <div
+    class="absolute inset-0 left-1/2 z-10 flex w-max -translate-x-1/2 justify-center gap-[32px]"
+    aria-hidden="true"
+  >
+    <div class="flex scale-[1.04] justify-center gap-[32px]">
+      {
+        COLS.map((col) => (
+          <div class={`flex flex-col gap-[20px] ${col.offset}`} style={`width:${col.width}px`}>
+            {Array.from({ length: ITEMS_PER_COL }).map(() =>
+              col.plain ? (
+                <div class="w-full rounded-sm bg-white/90" style={`height:${col.itemH}px`} />
+              ) : (
+                <div
+                  data-mosaic-cell
+                  class="relative w-full overflow-hidden rounded-sm bg-white/5"
+                  style={`height:${col.itemH}px`}
+                >
+                  <img
+                    src={tileSources[0].src}
+                    alt=""
+                    width="280"
+                    height="187"
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
+                  />
+                </div>
+              )
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <script id="mosaic-sources" type="application/json" set:html={JSON.stringify(tileSources)} is:inline
+  ></script>
+
+  <div class="pointer-events-none absolute inset-0 z-20 bg-[color:var(--bc-gold-mid)]/50 mix-blend-multiply"></div>
+  <div
+    class="pointer-events-none absolute inset-0 z-[105]"
+    style="background: radial-gradient(ellipse at center, rgba(30,25,15,0.86) 0%, rgba(30,25,15,0.45) 55%, rgba(30,25,15,0.15) 100%)"
+  >
+  </div>
+
+  <div
+    class="absolute left-1/2 top-1/2 z-[130] flex w-full max-w-[640px] -translate-x-1/2 -translate-y-1/2 flex-col items-center px-5 text-center text-white"
+  >
+    <h2 id="anspruch-titel" class="mb-2 text-2xl font-semibold text-white">
+      Unser Anspruch
+    </h2>
+
+    <p class="font-display text-white mb-2 text-[88px] font-bold leading-none tracking-tight sm:text-[120px] lg:text-[150px]">
+      <span aria-hidden="true"><span data-count-to="100">100</span><span class="text-accent-deco">%</span></span>
+      <span class="sr-only">100 Prozent unabhängig und objektiv</span>
+    </p>
+
+    <p class="font-display text-white mb-6 text-2xl font-medium lg:text-3xl" aria-hidden="true">
+      unabhängig &amp; objektiv
+    </p>
+
+    <p class="mb-8 max-w-sm text-base leading-relaxed text-white/85 lg:text-lg">
+      Wir begleiten Sie bis zum Ziel.
+    </p>
+
+    <Button href={routes.kontakt}>Ihre Anfrage</Button>
+  </div>
+</section>

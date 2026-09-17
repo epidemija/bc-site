@@ -1,0 +1,545 @@
+---
+/**
+ * Site header — rendered unchanged on every page.
+ *
+ * variant="overlay": transparent, drawn over a full-bleed hero (homepage).
+ * variant="solid":   opaque bar with a bottom border (all content subpages).
+ */
+import { Image } from "astro:assets";
+import logoWhite from "../../assets/logo/logo-bc-immowert-white.svg";
+import logoColor from "../../assets/logo/logo-bc-immowert.svg";
+import logoBadge from "../../assets/logo/logo-bc-immowert-badge.svg";
+import Icon from "../ui/Icon.astro";
+import { LEISTUNGEN, PRIMARY_NAV } from "../../config/navigation";
+import { ORGANISATION, routes } from "../../config/site";
+import Button from "../ui/Button.astro";
+
+interface Props {
+  variant?: "overlay" | "solid";
+  currentPath?: string;
+}
+const { variant = "overlay", currentPath = routes.home } = Astro.props;
+
+const overlay = variant === "overlay";
+const logoAlt = `${ORGANISATION.name} – ${ORGANISATION.tagline}`;
+// Link colour is handled in CSS (see the <style> block): the overlay header
+// starts white on the photograph and flips to the page's ink colour once it
+// becomes a solid bar over content.
+const linkTone = "header-link";
+const isCurrent = (href: string) => href === currentPath;
+---
+
+<header
+  data-header
+  data-variant={variant}
+  class={`site-header ${overlay ? "site-header--overlay" : "site-header--solid"}`}
+>
+  {/* ---------------- Desktop row ---------------- */}
+  <div class="mx-auto hidden w-full max-w-[1400px] items-center justify-between lg:flex">
+    <a href={routes.home} aria-label={`${ORGANISATION.name} – Startseite`} class="shrink-0">
+      <Image src={logoBadge} alt={logoAlt} class="header-logo h-20 w-auto" loading="eager" />
+    </a>
+
+    <nav
+      class="flex items-center gap-[48px] text-xs font-semibold uppercase "
+      aria-label="Hauptnavigation"
+    >
+      {
+        PRIMARY_NAV.map((item) => (
+          <a
+            href={item.href}
+            class={`header-link transition-colors${isCurrent(item.href) ? " is-current" : ""}`}
+            aria-current={isCurrent(item.href) ? "page" : undefined}
+          >
+            {item.name}
+          </a>
+        ))
+      }
+
+      <div class="relative" data-dropdown>
+        <button
+          type="button"
+          data-dropdown-button
+          aria-expanded="false"
+          aria-haspopup="true"
+          class="header-link flex items-center gap-1.5 py-3 text-xs font-semibold uppercase  transition-colors"
+        >
+          Leistungen
+          <Icon name="chevron-down" class="h-3.5 w-3.5" />
+        </button>
+
+        <div
+          data-dropdown-panel
+          hidden
+          class="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-4"
+        >
+          {/* The shadow is a filter: drop-shadow(), not a box-shadow. A
+              box-shadow shares this element's own box with overflow-hidden's
+              clip, and on some browsers a child's hover transition (the CTA
+              button below) can promote that shared box onto its own
+              compositing layer mid-frame, showing a hairline of the page
+              through the rounded corner for a repaint or two. A drop-shadow
+              is rendered from this element's already-clipped, already-
+              composited pixels, so there is no second box for a seam to
+              open between — the class that fails is `dropdown-panel-shadow`
+              below, not a Tailwind utility, so this stays out of the CSP-
+              audited utility surface. */}
+          <div class="dropdown-panel-surface dropdown-panel-shadow flex w-[1040px] overflow-hidden rounded-sm text-left normal-case">
+            {/* Promo panel: the same dark band, blurb and CTA the footer
+                already carries (see SiteFooter.astro), so the menu reads as
+                a considered piece of the site rather than a bare list of
+                links with a lot of empty space next to it. */}
+            <div class="dropdown-panel-promo relative flex w-[300px] shrink-0 flex-col justify-between overflow-hidden p-8">
+              <p class="relative z-10 text-[15px] font-light leading-relaxed text-white/90">
+                Als Bauingenieur und DEKRA-zertifizierter Bausachverständiger unterstützen wir Sie
+                mit fundierter Expertise und langjähriger Erfahrung bei allen Anliegen rund um
+                Immobilien.
+              </p>
+              <Button href={routes.kontakt} class="relative z-10 mt-8 self-start">Ihre Anfrage</Button>
+            </div>
+
+            <div class="grid flex-1 grid-cols-3 gap-10 p-10">
+              {
+                LEISTUNGEN.map((group) => (
+                  <div>
+                    <a
+                      href={group.href}
+                      class="bc-eyebrow bc-eyebrow--plain mb-4"
+                    >
+                      {group.title}
+                    </a>
+                    <ul class="flex flex-col gap-3.5">
+                      {group.items.map((item) => (
+                        <li>
+                          <a href={item.href} class="group block">
+                            <span class="block text-[15px] font-medium text-ink transition-colors group-hover:text-accent">
+                              {item.name}
+                            </span>
+                            <span class="block text-[13px] font-normal text-subtle">
+                              {item.sub}
+                            </span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="flex items-center gap-6">
+      <a
+        href={`tel:${ORGANISATION.phoneE164}`}
+        class="header-link flex items-center gap-2 text-base font-medium transition-colors"
+      >
+        {ORGANISATION.phone}
+        <Icon name="phone" />
+      </a>
+      <Button href={routes.kontakt}>Ihre Anfrage</Button>
+    </div>
+  </div>
+
+  {/* ---------------- Mobile row ---------------- */}
+  <div class="mx-auto flex w-full max-w-[1400px] items-center justify-between lg:hidden">
+    <a href={routes.home} aria-label={`${ORGANISATION.name} – Startseite`}>
+      {/* fetchpriority="high" (14.09.2026): PageSpeed/Lighthouse flagged this
+          pair as the mobile LCP (Largest Contentful Paint) element — both
+          images already load eager (see the CSS below: only one is ever
+          visible at a time via display:none, so both must be fetched
+          regardless of which theme/scroll state wins), fetchpriority tells
+          the browser THIS is the one worth racing ahead of everything else
+          on the page, not just "don't lazy-load it". */}
+      <Image src={logoWhite} alt="" aria-hidden="true" class="header-logo logo-light h-16 w-auto" loading="eager" fetchpriority="high" />
+      <Image src={logoColor} alt={logoAlt} class="header-logo logo-dark h-16 w-auto" loading="eager" fetchpriority="high" />
+    </a>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        data-menu-button
+        aria-label="Menü öffnen"
+        aria-expanded="false"
+        aria-controls="mobile-navigation"
+        class="burger relative flex h-11 w-11 flex-col items-center justify-center gap-[6px]"
+      >
+        <span class="burger-bar block h-[2px] w-6"></span>
+        <span class="burger-bar block h-[2px] w-6"></span>
+        <span class="burger-bar block h-[2px] w-6"></span>
+      </button>
+    </div>
+  </div>
+
+  {/* ---------------- Mobile menu ----------------
+       A full-screen panel rather than a drop-down: on a phone the menu is the
+       whole task, so it covers the header (z-index 60 over 50) and closes with
+       the cross in its own bar. */}
+  <div id="mobile-navigation" hidden class="mobile-nav lg:hidden">
+    <div class="mobile-nav__bar">
+      <a href={routes.home} aria-label={`${ORGANISATION.name} – Startseite`}>
+        <Image src={logoColor} alt={logoAlt} class="panel-logo panel-logo--color h-16 w-auto" />
+        <Image
+          src={logoWhite}
+          alt=""
+          aria-hidden="true"
+          class="panel-logo panel-logo--white h-16 w-auto"
+        />
+      </a>
+      <button
+        type="button"
+        data-menu-close
+        aria-label="Menü schließen"
+        class="mobile-nav__close flex h-11 w-11 items-center justify-center rounded-full border"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="mobile-nav__body flex flex-col px-5 pb-8 pt-3" aria-label="Mobile Navigation">
+      {
+        PRIMARY_NAV.map((item) => (
+          <a
+            href={item.href}
+            class={`header-link mobile-nav__top flex items-center text-sm font-semibold uppercase${isCurrent(item.href) ? " is-current" : ""}`}
+            aria-current={isCurrent(item.href) ? "page" : undefined}
+          >
+            {item.name}
+          </a>
+        ))
+      }
+      {
+        LEISTUNGEN.map((group) => (
+          <div class="mobile-nav__group">
+            <a
+              href={group.href}
+              class="header-group mobile-nav__group-title flex items-center text-xs font-semibold uppercase"
+            >
+              {group.title}
+            </a>
+            {group.items.map((item) => (
+              <a href={item.href} class="header-link mobile-nav__sub flex items-center pl-5 text-[15px]">
+                {item.name}
+              </a>
+            ))}
+          </div>
+        ))
+      }
+      <a
+        href={`tel:${ORGANISATION.phoneE164}`}
+        class="header-link mobile-nav__top mt-2 flex items-center gap-2 text-base font-medium"
+      >
+        {ORGANISATION.phone}
+        <Icon name="phone" />
+      </a>
+      <Button href={routes.kontakt} block class="mt-3">Ihre Anfrage</Button>
+    </nav>
+  </div>
+</header>
+
+<style>
+  /* Dropdown category labels reuse .bc-eyebrow's type treatment but skip
+     the small gold dash — the dropdown's own layout already separates
+     the three groups, so the dash is a redundant flourish here. Scoped
+     to this component only; .bc-eyebrow keeps its dash everywhere else. */
+  .bc-eyebrow--plain:before {
+    display: none;
+  }
+
+  /*
+   * The header stays with the visitor on every page.
+   *
+   * "overlay" (homepage): fixed and transparent so the hero photograph runs
+   * underneath it, then fades in a blurred, semi-transparent bar once the page
+   * is scrolled — the content stays faintly visible through it.
+   * "solid" (subpages): sticky from the start, same blur treatment.
+   *
+   * The `is-scrolled` class is toggled by src/scripts/site.js. Without
+   * JavaScript the header simply keeps its initial appearance, which is
+   * legible in both cases.
+   */
+  .site-header {
+    z-index: 50;
+    width: 100%;
+    /* Mobile keeps a tighter band around a bigger logo: 0.875rem + 4rem mark
+       + 0.875rem = the same 92px the open menu's own bar measures, so the
+       brand does not move when the panel opens. Desktop is unchanged. */
+    padding: 0.875rem 1.25rem;
+    transition:
+      background-color var(--transition-normal),
+      backdrop-filter var(--transition-normal),
+      border-color var(--transition-normal),
+      padding var(--transition-normal),
+      box-shadow var(--transition-normal);
+  }
+  @media (min-width: 1024px) {
+    .site-header {
+      padding: 1.25rem 2.5rem;
+    }
+  }
+
+  .site-header--overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+  }
+
+  .site-header--solid {
+    position: sticky;
+    top: 0;
+    background-color: var(--bc-surface);
+    border-bottom: 1px solid var(--bc-border);
+  }
+
+  /* ---- Scrolled state: a translucent, blurred bar ---------------------- */
+  .site-header.is-scrolled {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    backdrop-filter: var(--bc-glass-blur);
+    box-shadow: 0 1px 16px rgb(27 25 23 / 0.08);
+    /* Both variants settle on the page's own surface colour, so the bar
+       belongs to the page rather than floating over it as a dark slab. */
+    background-color: var(--bc-glass-bg);
+    border-bottom-color: var(--bc-border);
+  }
+
+  /* ---- Dropdown panel: fully opaque, no blur/transparency. The glass
+     look kept drifting out of sync across tuning passes, so the dropdown
+     now just sits on the page's own solid surface colour instead. ---- */
+  .dropdown-panel-surface {
+    background-color: var(--bc-surface);
+  }
+
+  /* filter: drop-shadow(), not box-shadow — see the comment above this
+     element's markup. Two passes (dx dy blur, spread color) approximate the
+     box-shadow's own two-layer look (a tight near shadow plus a soft far
+     one) since drop-shadow has no spread argument to fake that with alone. */
+  .dropdown-panel-shadow {
+    filter: drop-shadow(0 4px 8px rgb(27 25 23 / 0.1)) drop-shadow(0 16px 28px rgb(27 25 23 / 0.14));
+  }
+
+  /* Promo panel: same dark surface as the footer's own CTA band, with two
+     soft radial blooms for depth rather than a flat fill — restrained
+     version of the same "dark band with light accents" idea used on the
+     hero and footer elsewhere on the site. */
+  .dropdown-panel-promo {
+    background-color: var(--bc-footer);
+    background-image:
+      radial-gradient(circle at 10% 8%, color-mix(in srgb, white 10%, transparent) 0%, transparent 55%),
+      radial-gradient(
+        circle at 100% 108%,
+        color-mix(in srgb, var(--bc-accent-solid) 25%, transparent) 0%,
+        transparent 60%
+      );
+  }
+
+  /* ---- Colour ----------------------------------------------------------
+     The overlay header sits on a dark photograph, so it starts white. Once
+     scrolled it sits over page content and must take the page's ink colour,
+     otherwise white-on-light is unreadable. The solid header is always ink.
+  ----------------------------------------------------------------------- */
+  .site-header :global(.header-link),
+  .site-header :global(.header-group) {
+    color: var(--bc-ink);
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-link),
+  .site-header--overlay:not(.is-scrolled) :global(.header-group) {
+    color: #fff;
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-group) {
+    color: rgb(255 255 255 / 0.8);
+  }
+  .site-header :global(.header-link:hover) {
+    color: var(--bc-accent);
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-link:hover) {
+    color: var(--bc-accent-deco);
+  }
+  .site-header :global(.header-link.is-current) {
+    color: var(--bc-accent);
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-link.is-current) {
+    color: var(--bc-accent-deco);
+  }
+
+  .site-header :global(.header-toggle) {
+    border-color: var(--bc-border);
+    color: var(--bc-ink);
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-toggle) {
+    border-color: rgb(255 255 255 / 0.45);
+    color: #fff;
+  }
+  .site-header :global(.header-toggle:hover) {
+    border-color: var(--bc-accent);
+    color: var(--bc-accent);
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-toggle:hover) {
+    border-color: var(--bc-accent-deco);
+    color: var(--bc-accent-deco);
+  }
+
+  .burger-bar {
+    background-color: var(--bc-ink);
+    transition: background-color var(--transition-normal);
+  }
+  .site-header--overlay:not(.is-scrolled) .burger-bar {
+    background-color: #fff;
+  }
+
+  /* ---- Logo ------------------------------------------------------------
+     Two files ship; CSS picks the legible one. White over the photograph and
+     in the dark theme, full colour on a light scrolled bar.
+  ----------------------------------------------------------------------- */
+  .site-header :global(.logo-dark) {
+    display: none;
+  }
+  .site-header--overlay:not(.is-scrolled) :global(.header-logo) {
+    filter: drop-shadow(0 2px 10px rgb(0 0 0 / 0.7));
+  }
+  .site-header--solid :global(.logo-light),
+  .site-header.is-scrolled :global(.logo-light) {
+    display: none;
+  }
+  .site-header--solid :global(.logo-dark),
+  .site-header.is-scrolled :global(.logo-dark) {
+    display: block;
+  }
+  /* In the dark theme the white mark stays correct throughout. */
+  :global(.dark) .site-header :global(.logo-light) {
+    display: block;
+  }
+  :global(.dark) .site-header :global(.logo-dark) {
+    display: none;
+  }
+
+  .site-header.is-scrolled :global(.header-logo) {
+    height: 3rem;
+  }
+
+  /* ---- Mobile menu panel ------------------------------------------------
+     Full-screen, opaque and above the header, so nothing of the page shows
+     through at the edges and the cross is the only way out. `inset: 0` with
+     `height: 100dvh` keeps it correct while mobile browser chrome slides in
+     and out. The panel scrolls internally; the page behind it is locked by
+     src/scripts/site.js.
+  ----------------------------------------------------------------------- */
+  .mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: var(--bc-surface);
+    color: var(--bc-ink);
+  }
+  /* The panel is its own surface, so header state must not tint its links. */
+  .mobile-nav :global(.header-link),
+  .mobile-nav :global(.header-group) {
+    color: var(--bc-ink) !important;
+  }
+  .mobile-nav :global(.header-group) {
+    color: var(--bc-muted) !important;
+  }
+  .mobile-nav :global(.header-link.is-current) {
+    color: var(--bc-accent) !important;
+  }
+
+  /* Same height as the page header's own mobile row (0.875rem of padding
+     around a 4rem logo), so the panel opens without the brand jumping. */
+  .mobile-nav__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--bc-border);
+  }
+  .mobile-nav__close {
+    border-color: var(--bc-border);
+    color: var(--bc-ink);
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .mobile-nav__close:hover {
+    border-color: var(--bc-accent);
+    color: var(--bc-accent);
+  }
+  .mobile-nav__body {
+    flex: 1;
+  }
+  /* Row heights, not gaps, carry the rhythm here: the previous 8px gap on top
+     of 44px rows spread thirteen links over more than one screen. Top-level
+     entries keep the full 44px touch target; the service links sit at 40px,
+     which is still well above the 24px WCAG minimum and takes ~65px out of
+     the list. */
+  .mobile-nav :global(.mobile-nav__top) {
+    min-height: 2.75rem;
+  }
+  .mobile-nav__group {
+    margin-top: var(--space-md);
+  }
+  .mobile-nav :global(.mobile-nav__group-title) {
+    min-height: 2rem;
+  }
+  .mobile-nav :global(.mobile-nav__sub) {
+    min-height: 2.5rem;
+    font-weight: 400;
+  }
+
+  /* The panel is always on the page surface, so the colour mark is right in
+     the light theme and the white one in the dark theme. */
+  .mobile-nav :global(.panel-logo--white) {
+    display: none;
+  }
+  :global(.dark) .mobile-nav :global(.panel-logo--white) {
+    display: block;
+  }
+  :global(.dark) .mobile-nav :global(.panel-logo--color) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header,
+    .site-header :global(.header-logo),
+    .burger-bar {
+      transition: none;
+    }
+  }
+</style>
+
+<style>
+  /* The burger becomes a cross when the menu is open. Pure CSS so the button
+     works the moment it is painted. */
+  .burger span {
+    transition:
+      transform var(--transition-normal),
+      opacity var(--transition-normal);
+  }
+  .burger.is-open span:first-child {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .burger.is-open span:nth-child(2) {
+    opacity: 0;
+  }
+  .burger.is-open span:last-child {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+</style>

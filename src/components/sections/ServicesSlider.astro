@@ -1,0 +1,195 @@
+---
+/**
+ * Services overview.
+ *
+ * Every card is a real link with a real heading and real text in the HTML —
+ * the horizontal scroll is presentation only, so search engines and AI
+ * crawlers read all eight services regardless of scroll position.
+ */
+import { getImage } from "astro:assets";
+import Icon from "../ui/Icon.astro";
+import { SERVICES } from "../../config/services";
+
+/*
+ * Card images.
+ *
+ * The card is portrait (3:4); the source photographs are landscape
+ * (1780x745). Scaling the whole frame down would hand the browser a
+ * 560x234 file to stretch into a 480x640 box — a 2.7x upscale, which is
+ * what looked blurry. Cropping with fit:"cover" uses the full height of
+ * the original instead.
+ *
+ * 558x744 is the largest true 3:4 crop the source allows, and every wider
+ * variant would carry the same 745px of vertical detail for more bytes —
+ * so exactly one crop per format is generated.
+ */
+const CARD_W = 558;
+const CARD_H = 744;
+
+const cardImages = await Promise.all(
+  SERVICES.map(async (service) => ({
+    avif: await getImage({
+      src: service.img, width: CARD_W, height: CARD_H,
+      fit: "cover", position: "attention", format: "avif", quality: 90,
+    }),
+    webp: await getImage({
+      src: service.img, width: CARD_W, height: CARD_H,
+      fit: "cover", position: "attention", format: "webp", quality: 92,
+    }),
+  }))
+);
+---
+
+<section class="bc-section-sm mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+  id="leistungen"
+  aria-labelledby="leistungen-titel"
+>
+  {/* No visible section header — the cards carry their own titles. The
+      heading stays in the markup as a screen-reader-only <h2> so the section
+      keeps a real accessible name (aria-labelledby above points at it) and
+      the document outline does not lose a level. Same treatment as the
+      card-grid section on /dienstleistungen/digitale-grundrisse/. */}
+  <h2 id="leistungen-titel" class="sr-only">Alles rund um Ihre Immobilie</h2>
+
+  {/* The track sits in a relative wrapper so the two arrows can float over
+      its left and right edge instead of taking width away from the cards.
+      They are siblings of the track, not children — the track scrolls, the
+      arrows stay put — and z-10 keeps them above each card's stretched link. */}
+  <div class="relative">
+    <ul
+      id="leistungen-track"
+      tabindex="0"
+      role="list"
+      aria-label="Leistungen, horizontal scrollbar"
+      class="no-scrollbar flex list-none snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth p-0"
+    >
+    {/* role="list" restates the <ul>'s own implicit role — required because
+        Tailwind's list-none sets list-style:none, and Safari (uniquely)
+        strips a <ul>'s implicit "list" accessibility role whenever
+        list-style is removed. role="list" (as opposed to no role, or the
+        role="group" this used to carry) is what keeps every <li> inside
+        recognised as a listitem in the accessibility tree — a role of
+        "group" instead does the opposite, since an explicit role always
+        overrides the element's native semantics, and "group" carries no
+        implied listitem semantics for its children the way "list" does. */}
+    {
+      SERVICES.map((service, i) => (
+        <li
+          data-card
+          data-reveal
+          class="reveal-on-scroll group relative h-[500px] w-[320px] shrink-0 snap-start overflow-hidden rounded-md sm:w-[400px] lg:h-[640px] lg:w-[480px]"
+          style={`transition-delay:${Math.min(i, 3) * 100}ms`}
+        >
+          <picture>
+            <source type="image/avif" srcset={cardImages[i].avif.src} />
+            <img
+              src={cardImages[i].webp.src}
+              width={CARD_W}
+              height={CARD_H}
+              alt={service.imgAlt}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding={i === 0 ? "sync" : "async"}
+              class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </picture>
+          <div
+            class="absolute inset-0"
+            style="background: linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.60) 34%, rgba(0,0,0,0.20) 62%, rgba(0,0,0,0.12) 100%)"
+            aria-hidden="true"
+          />
+
+          <span
+            class="font-display absolute left-6 top-6 text-sm font-light  text-white/70 lg:left-7 lg:top-7"
+            aria-hidden="true"
+          >
+            {String(i + 1).padStart(2, "0")}
+          </span>
+
+          <div class="absolute inset-x-0 bottom-0 p-6 lg:p-7">
+            <h3 class="font-display text-[21px] text-white lg:text-[23px]">
+              {/* Stretched link: the whole card is clickable, but the
+                  accessible name stays the service title. */}
+              <a href={service.path} class="after:absolute after:inset-0 after:content-['']">
+                {service.name}
+              </a>
+            </h3>
+            <span
+              class="mt-2 block h-[3px] w-8 rounded-full bg-[color:var(--bc-accent-deco)] transition-all duration-500 group-hover:w-14"
+              aria-hidden="true"
+            />
+            <p class="mt-3 text-sm font-light leading-relaxed text-white/90">
+              {service.description}
+            </p>
+            <span
+              class="bc-btn bc-btn-ghost bc-btn-on-dark mt-4 text-sm group-hover:text-white"
+              aria-hidden="true"
+            >
+              Mehr erfahren
+              <Icon name="arrow-dr" />
+            </span>
+          </div>
+        </li>
+      ))
+    }
+    </ul>
+
+    <button
+      type="button"
+      data-slider-prev
+      aria-label="Vorherige Leistungen anzeigen"
+      aria-controls="leistungen-track"
+      class="absolute left-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-[color:var(--bc-border)] bg-[color:var(--bc-page)] text-ink transition hover:border-accent-solid hover:bg-accent-solid hover:text-white lg:flex"
+      style="filter: drop-shadow(0 2px 10px rgba(0,0,0,0.22))"
+    >
+      <Icon name="arrow-left" class="h-4 w-4" />
+    </button>
+    <button
+      type="button"
+      data-slider-next
+      aria-label="Weitere Leistungen anzeigen"
+      aria-controls="leistungen-track"
+      class="absolute right-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-[color:var(--bc-border)] bg-[color:var(--bc-page)] text-ink transition hover:border-accent-solid hover:bg-accent-solid hover:text-white lg:flex"
+      style="filter: drop-shadow(0 2px 10px rgba(0,0,0,0.22))"
+    >
+      <Icon name="arrow-right" class="h-4 w-4" />
+    </button>
+  </div>
+
+  {/* On a phone the track is swiped, but a swipe is invisible: these buttons
+      make the same movement discoverable and give keyboard users a control
+      that does not depend on the pointer. They are hidden on large screens,
+      where the arrows float over the track itself. */}
+  <div class="mt-6 flex items-center gap-4">
+    <div
+      class="h-[2px] flex-1 overflow-hidden rounded-full bg-[color:var(--bc-border)]"
+      aria-hidden="true"
+    >
+      <div
+        data-slider-progress
+        class="h-full w-[8%] rounded-full bg-[color:var(--bc-accent-deco)] transition-[width] duration-150 ease-out"
+      >
+      </div>
+    </div>
+
+    <div class="flex shrink-0 items-center gap-2 lg:hidden">
+      <button
+        type="button"
+        data-slider-prev
+        aria-label="Vorherige Leistungen anzeigen"
+        aria-controls="leistungen-track"
+        class="flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--bc-border)] text-ink transition hover:border-accent-solid hover:bg-accent-solid hover:text-white"
+      >
+        <Icon name="arrow-left" class="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        data-slider-next
+        aria-label="Weitere Leistungen anzeigen"
+        aria-controls="leistungen-track"
+        class="flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--bc-border)] text-ink transition hover:border-accent-solid hover:bg-accent-solid hover:text-white"
+      >
+        <Icon name="arrow-right" class="h-4 w-4" />
+      </button>
+    </div>
+  </div>
+</section>

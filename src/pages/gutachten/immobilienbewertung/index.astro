@@ -1,0 +1,308 @@
+---
+/**
+ * Immobilienbewertung — service page, second level.
+ *
+ * Structure follows docs/MASTER-TEMPLATE.md: photographic header (an
+ * individual service, not a category — §5d), one <h1>, an <h2> per section, a
+ * visible breadcrumb trail because the page sits two levels down, and metadata
+ * from src/config/pages.ts.
+ *
+ * The prices and the process steps are declared once here and used twice: the
+ * components render them and the structured data is built from the same
+ * arrays, so the page and the JSON-LD can never disagree.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import SurveyContour from "../../../components/ui/SurveyContour.astro";
+import PriceCards, { type PriceTier, type CompareRow } from "../../../components/sections/PriceCards.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, servicePriceSchema, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_GUTACHTEN } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-immobilienbewertung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.immobilienbewertung;
+
+/* ------------------------------------------------------------- content */
+
+/** When a valuation is worth commissioning. */
+const anlaesse = [
+  "Kauf oder Verkauf einer Immobilie",
+  "Vermögensübersicht und strategischer Planung",
+  "Erbschaft oder Schenkung",
+  "Scheidung oder Vermögensaufteilung",
+  "Einschätzung von Investitionsentscheidungen",
+];
+
+/** The three recognised valuation methods, with what each one is for. */
+const verfahren = [
+  {
+    name: "Vergleichswertverfahren",
+    text: "Der Wert wird aus tatsächlich erzielten Kaufpreisen vergleichbarer Objekte in vergleichbarer Lage abgeleitet.",
+  },
+  {
+    name: "Ertragswertverfahren",
+    text: "Maßgeblich sind die nachhaltig erzielbaren Erträge — das Verfahren für vermietete und renditeorientierte Objekte.",
+  },
+  {
+    name: "Sachwertverfahren",
+    text: "Bewertet werden Bausubstanz und Grundstück, wenn Vergleichsfälle oder Erträge keine tragfähige Grundlage bilden.",
+  },
+];
+
+const vorteile = [
+  "Fachlich fundierte und nachvollziehbare Ergebnisse",
+  "Objektive und unabhängige Bewertung",
+  "Praxisnahe Einschätzung für reale Entscheidungen",
+  "Persönliche Betreuung und direkte Abstimmung",
+  "Regionale Marktkenntnis in Speyer, der Vorderpfalz und der Metropolregion Rhein-Neckar",
+];
+
+/** One shared card grid instead of three hand-rolled blocks — same FactGrid
+ * pattern the other service pages already use for "when it applies / method
+ * / what you get", so this page reads consistently with the rest of the
+ * site. "Warum wir?" on the other pages plays the role "Ihr Vorteil" plays
+ * here — set wide for the same reason: closes a 3-card grid cleanly. */
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann ist eine Immobilienbewertung sinnvoll?",
+    items: anlaesse,
+  },
+  {
+    icon: "target",
+    title: "Transparente und nachvollziehbare Bewertung",
+    items: verfahren.map((v) => v.name),
+  },
+  {
+    icon: "award",
+    title: "Ihr Vorteil",
+    items: vorteile,
+  },
+];
+
+/** Price tiers. These same figures feed the Offer structured data below. */
+const tiers: PriceTier[] = [
+  {
+    ribbon: "Orientierung",
+    name: "Wertermittlung",
+    price: 499,
+    priceLabel: "499,00 €",
+    scope: [
+      "Wertermittlung\nauf ca. 3 – 5 Seiten",
+      "Berechnung des Immobilienwertes",
+      "Bilddokumentation",
+      "Vor-Ort-Termin (optional)",
+    ],
+    purpose: ["Erste Wertorientierung", "Private Angelegenheiten", "Entscheidungsvorbereitung"],
+    href: routes.kontakt,
+  },
+  {
+    ribbon: "Kompakt und präzise",
+    name: "Kurzgutachten",
+    price: 1199,
+    priceLabel: "1.199,00 €",
+    scope: [
+      "Schriftliches Kurzgutachten\nauf ca. 20 – 30 Seiten",
+      "Berechnung des Immobilienwertes",
+      "Bild- und Textdokumentation",
+      "Vor-Ort-Termin",
+    ],
+    purpose: ["Preiseinschätzung", "Private Vermögensermittlung", "Bei Kauf und Verkauf"],
+    href: routes.kontakt,
+    featured: true,
+  },
+  {
+    ribbon: "Detail- und umfangreich",
+    name: "Verkehrswertgutachten",
+    price: 2499,
+    priceLabel: "2.499,00 €",
+    scope: [
+      "Schriftliches Verkehrswertgutachten\nauf ca. 60 – 80 Seiten",
+      "Berechnung des Immobilienwertes",
+      "Bild- und Textdokumentation",
+      "Vor-Ort-Termin",
+      "Prüfung der Objektunterlagen",
+    ],
+    purpose: [
+      "Für Ämter und Behörden",
+      "Bei rechtlichen Auseinandersetzungen",
+      "Für finanzielle Transaktionen",
+    ],
+    href: routes.kontakt,
+  },
+];
+
+/**
+ * Feature-by-feature comparison shown in the desktop table below the three
+ * cards. Every value here is drawn from the `tiers` array above — no claim
+ * is made in the table that isn't already stated in a card's own scope list.
+ */
+const compareRows: CompareRow[] = [
+  { label: "Umfang", values: ["ca. 3 – 5 Seiten", "ca. 20 – 30 Seiten", "ca. 60 – 80 Seiten"] },
+  { label: "Berechnung des Immobilienwertes", values: [true, true, true] },
+  { label: "Dokumentation", values: ["Bilder", "Bilder & Text", "Bilder & Text"] },
+  { label: "Vor-Ort-Termin", values: ["Optional", true, true] },
+  { label: "Prüfung der Objektunterlagen", values: [false, false, true] },
+];
+
+/** The office's standard process, shared with the other Gutachten pages. */
+const steps = ABLAUF_GUTACHTEN;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("immobilienbewertung")?.entries ?? []),
+  servicePriceSchema({
+    page,
+    name: "Immobilienbewertung",
+    description:
+      "Marktgerechte Wertermittlung von Immobilien durch einen Bauingenieur und " +
+      "DEKRA-zertifizierten Sachverständigen — als Wertermittlung, Kurzgutachten oder " +
+      "Verkehrswertgutachten.",
+    offers: tiers.map((tier) => ({
+      name: tier.name,
+      description: tier.scope.join(", ").replace(/\n/g, " "),
+      minPrice: tier.price,
+    })),
+  }),
+  howToSchema({
+    page,
+    name: "Ablauf einer Immobilienbewertung",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="immobilienbewertung" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Immobilienbewertungen"
+    subtitle={["Wertermittlung", "Kurzgutachten", "Verkehrswertgutachten"]}
+    image={heroImage}
+    imageAlt="Sachverständiger bei der Wertermittlung einer Immobilie mit Unterlagen und Taschenrechner"
+  />
+
+  <Breadcrumbs page="immobilienbewertung" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout: all copy in one column, a photo beside it —
+      only this page's opening section uses this pattern (the rest of the
+      site keeps a two-column text split, see the other service pages).
+      TEMPORARY: reusing the page's own hero photo here until a dedicated
+      shot exists for this spot — swap the <Picture> below out once one
+      does. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+                <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Fundierte Wertermittlung Ihrer Immobilie
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Die Immobilienbewertung bildet die Grundlage für fundierte Entscheidungen rund um Kauf,
+          Verkauf oder strategische Planungen. Auf Basis objektspezifischer Merkmale sowie der
+          aktuellen Marktsituation wird der Wert Ihrer Immobilie nachvollziehbar und marktgerecht
+          ermittelt.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Als Bauingenieur und DEKRA-zertifizierter Sachverständiger erfolgt die Bewertung unter
+          Anwendung anerkannter Verfahren und unter Berücksichtigung aller relevanten Faktoren.
+          Leistungen im Bereich der Immobilienbewertung.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Sachverständiger bei der Wertermittlung einer Immobilie mit Unterlagen und Taschenrechner"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Überblick ----------------
+      One shared card grid instead of two separate hand-rolled sections —
+      same FactGrid pattern the other service pages already use for this
+      exact kind of content (when it applies / method / what you get), so
+      this page reads consistently with the rest of the site rather than
+      its own one-off two-column-plus-benefits treatment. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <SurveyContour />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      {/* No visible eyebrow/heading — three self-explanatory cards need no
+          section title above them. Kept as a screen-reader-only heading so
+          the section still has a real accessible name. */}
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass, Verfahren und Ihr Vorteil auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+
+  {/* ---------------- Prices ---------------- */}
+  {/* No border: fades to the page colour over a fixed 96px at top and
+      bottom, same treatment as the other banded sections on the site. */}
+  <section
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, var(--bc-surface) 96px, var(--bc-surface) calc(100% - 96px), var(--bc-page) 100%)"
+    aria-labelledby="preise-titel"
+  >
+    <div class="mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <div class="mb-10 max-w-2xl lg:mb-14">
+                <h2
+          id="preise-titel"
+          class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Drei Bewertungstiefen
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Welche Bewertung die richtige ist, hängt vom Verwendungszweck ab: von der ersten
+          Wertorientierung über eine ausführlichere Bewertung für private Angelegenheiten bis zum
+          Verkehrswertgutachten für formelle Anlässe.
+        </p>
+      </div>
+
+      <PriceCards tiers={tiers} compareRows={compareRows} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="immobilienbewertung" eyebrow="" />
+
+  <ClosingCta heading="Sie wissen nicht, welche Bewertung Sie benötigen?" text="Wir prüfen Ihren Anlass vorab und empfehlen Ihnen nur den Umfang, der für Ihren konkreten Fall sinnvoll ist." buttonHref={routes.kontakt} />
+</BaseLayout>

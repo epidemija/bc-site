@@ -1,0 +1,85 @@
+---
+/**
+ * Certification section.
+ *
+ * The DEKRA seals are the strongest trust signal the office has, so they are
+ * presented as content with context — what each certificate covers, its
+ * registration number, and how long it runs — rather than as decorative
+ * badges. The same facts feed the `hasCredential` entries in the
+ * Organization schema; both read from src/config/site.ts so they cannot
+ * disagree.
+ */
+import { Image } from "astro:assets";
+import Icon from "../ui/Icon.astro";
+import { CERTIFICATES, DEKRA_VERIFY_URL } from "../../config/certificates";
+
+const certificates = CERTIFICATES;
+---
+
+<section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+  aria-labelledby="zertifikate-titel"
+>
+  <div class="mb-10 max-w-2xl lg:mb-14">
+    <h2
+      id="zertifikate-titel"
+      class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+      data-reveal
+    >
+      Zertifikate
+    </h2>
+    <p class="reveal-on-scroll mt-4 text-base leading-relaxed text-muted" data-reveal>
+      Die Qualifikationen sind durch die DEKRA Certification GmbH nach anerkannten Standards
+      geprüft und werden regelmäßig rezertifiziert.
+    </p>
+  </div>
+
+  <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8">
+    {
+      certificates.map((cert, i) => (
+        <li
+          class="reveal-on-scroll flex items-start gap-6 rounded-md border border-[color:var(--bc-border)] bg-surface p-6 lg:gap-8 lg:p-8"
+          data-reveal
+          style={`transition-delay:${i * 120}ms`}
+        >
+          <Image src={cert.img} alt={cert.alt} class="h-36 w-auto shrink-0 lg:h-44" loading="lazy" />
+          <div>
+            <h3 class="font-display text-lg text-ink lg:text-xl">
+              {cert.title}
+            </h3>
+            <p class="mt-2 text-sm leading-relaxed text-muted">{cert.standard}</p>
+            <p class="mt-1 text-sm text-muted">{cert.scope}</p>
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <span class="inline-block rounded-sm bg-[color:var(--bc-accent-deco)]/15 px-2.5 py-1 text-xs font-medium text-accent">
+                {cert.valid}
+              </span>
+              <span class="text-xs text-muted">Registrier-Nr. {cert.registrierNr}</span>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+              <a
+                class="inline-flex items-center gap-x-1.5 text-sm font-medium text-accent underline decoration-[color:var(--bc-accent)]/40 decoration-2 underline-offset-4 transition hover:decoration-[color:var(--bc-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+                href={cert.pdfHref}
+                data-pdf-trigger
+              >
+                Zertifikat ansehen (PDF)
+                <svg class="size-2.5 shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M5.5 2.5 11 8l-5.5 5.5z" />
+                </svg>
+              </a>
+              <a
+                class="inline-flex items-center gap-x-1.5 text-sm font-medium text-accent underline decoration-[color:var(--bc-accent)]/40 decoration-2 underline-offset-4 transition hover:decoration-[color:var(--bc-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+                href={DEKRA_VERIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Zertifikat prüfen
+                <Icon name="arrow-dr" class="size-3.5 shrink-0" />
+              </a>
+            </div>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</section>

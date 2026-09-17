@@ -1,0 +1,95 @@
+---
+/**
+ * PDF lightbox.
+ *
+ * A link marked `data-pdf-trigger` opens its same-origin PDF here instead of
+ * a new tab: an overlay with an iframe, closed by Escape, the backdrop, or
+ * the close button. No PDF.js, no third-party viewer — every browser already
+ * renders a PDF natively inside an iframe, so this is just a frame in a box,
+ * consistent with the site's zero-third-party-request policy.
+ *
+ * Progressive enhancement only: without JavaScript the trigger is a plain
+ * link with a real href and opens the PDF directly, same as before.
+ */
+---
+
+<div id="pdf-lightbox" class="pdf-lightbox" hidden data-pdf-lightbox>
+  <div class="pdf-lightbox__backdrop" data-pdf-lightbox-backdrop></div>
+  <div class="pdf-lightbox__panel" role="dialog" aria-modal="true" aria-label="Zertifikat">
+    <button
+      type="button"
+      class="pdf-lightbox__close"
+      data-pdf-lightbox-close
+      aria-label="Schließen"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+    <iframe data-pdf-lightbox-frame title="Zertifikat" class="pdf-lightbox__frame"></iframe>
+  </div>
+</div>
+
+<style>
+  .pdf-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+  }
+  .pdf-lightbox__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(20 18 16 / 0.72);
+  }
+  .pdf-lightbox__panel {
+    position: relative;
+    z-index: 1;
+    width: min(860px, 100%);
+    height: min(88dvh, 1100px);
+    background-color: var(--bc-surface);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .pdf-lightbox__frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .pdf-lightbox__close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    background-color: var(--bc-surface);
+    border: 1px solid var(--bc-border);
+    color: var(--bc-ink);
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+  .pdf-lightbox__close:hover {
+    color: var(--bc-accent);
+    border-color: var(--bc-accent);
+  }
+</style>

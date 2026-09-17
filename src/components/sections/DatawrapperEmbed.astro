@@ -1,0 +1,131 @@
+---
+/**
+ * A Datawrapper chart, gated behind the same external-content consent as
+ * Google Analytics and the OpenStreetMap embed (see MapEmbed.astro,
+ * ConsentBanner.astro / site.js) — not behind its own separate click.
+ *
+ * Datawrapper (see legal.datawrapper in config/site.ts) states its embeds set
+ * no cookies and use no trackers or third-party scripts of their own. That
+ * does not make the request free of consequence: loading the chart still
+ * means a browser request to their CDN, which carries the visitor's IP like
+ * any request does. So this still waits for consent rather than loading on
+ * page open — nothing third-party happens before that, and no dwcdn.net URL
+ * ever sits in the delivered HTML. The `data-external-embed` marker below is
+ * what makes the consent banner show itself on a page that has this chart.
+ *
+ * The button stays as a direct path for a visitor who lands here before the
+ * banner has appeared, or who declined earlier and changes their mind: it
+ * grants consent itself (same effect as the banner's "Akzeptieren") and the
+ * chart loads immediately after.
+ */
+export interface Props {
+  /** The id from the Datawrapper embed code, e.g. "K2Bz4". */
+  chartId: string;
+  /** Datawrapper's own embed code specifies this per chart; falls back to a
+   * sane default so the layout does not jump once the chart has loaded. */
+  minHeight?: number;
+  class?: string;
+}
+
+const { chartId, minHeight = 400, class: className = "" } = Astro.props;
+---
+
+<div
+  class:list={["relative w-full overflow-hidden rounded-md border border-[color:var(--bc-border)] bg-surface", className]}
+  data-dw-embed
+  data-external-embed
+  data-chart-id={chartId}
+  data-min-height={minHeight}
+>
+  <div
+    class="flex min-h-[240px] flex-col items-center justify-center gap-4 px-6 py-14 text-center sm:min-h-[300px]"
+    data-dw-placeholder
+  >
+    <svg
+      class="h-8 w-8 text-accent"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z"></path>
+      <path d="M9 4v14M15 6v14"></path>
+    </svg>
+    <p class="max-w-md text-sm leading-relaxed text-muted">
+      Die interaktive Karte lädt automatisch, sobald Sie der Einbindung externer Inhalte
+      zustimmen. Dabei wird Ihre IP-Adresse an den Anbieter Datawrapper übertragen — nach
+      Angaben des Anbieters ohne Cookies oder Trackingdienste.
+    </p>
+    <button
+      type="button"
+      class="hidden rounded-sm border border-[color:var(--bc-accent)] px-5 py-3 text-sm font-semibold text-ink transition hover:bg-[color:color-mix(in_srgb,var(--bc-accent)_14%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+      data-dw-load
+    >
+      Karte laden
+    </button>
+  </div>
+</div>
+
+<script>
+  // Kept in sync with CONSENT_KEY in src/scripts/site.js by hand — two
+  // separate script contexts, so the string is duplicated rather than
+  // imported.
+  const CONSENT_KEY = "bc-consent-external";
+
+  const wrappers = document.querySelectorAll<HTMLElement>("[data-dw-embed]");
+
+  function loadChart(wrapper: HTMLElement) {
+    const placeholder = wrapper.querySelector<HTMLElement>("[data-dw-placeholder]");
+    const chartId = wrapper.dataset.chartId;
+    const minHeight = wrapper.dataset.minHeight ?? "400";
+    if (!chartId || wrapper.querySelector("[data-dw-target]")) return;
+
+    const target = document.createElement("div");
+    target.id = `datawrapper-vis-${chartId}`;
+    target.dataset.dwTarget = "";
+    target.style.minHeight = `${minHeight}px`;
+
+    placeholder?.remove();
+    wrapper.appendChild(target);
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.defer = true;
+    script.src = `https://datawrapper.dwcdn.net/${chartId}/embed.js`;
+    script.charset = "utf-8";
+    script.dataset.target = `#datawrapper-vis-${chartId}`;
+    wrapper.appendChild(script);
+  }
+
+  // Fires the instant consent is granted — for a visitor who accepts the
+  // banner right now on this page. For a *returning* visitor whose consent
+  // is already stored, don't rely on site.js's own synchronous re-dispatch
+  // arriving before this listener is registered (Astro bundles this
+  // component's script together with site.js, and cross-file execution
+  // order between them is not something to depend on) — check localStorage
+  // directly instead, which is order-independent.
+  document.addEventListener("bc:external-consent-granted", () => {
+    for (const wrapper of wrappers) loadChart(wrapper);
+  });
+  try {
+    if (localStorage.getItem(CONSENT_KEY) === "granted") {
+      for (const wrapper of wrappers) loadChart(wrapper);
+    }
+  } catch (e) {}
+
+  for (const wrapper of wrappers) {
+    const button = wrapper.querySelector<HTMLButtonElement>("[data-dw-load]");
+    button?.classList.remove("hidden");
+    button?.addEventListener("click", () => {
+      try {
+        localStorage.setItem(CONSENT_KEY, "granted");
+      } catch (e) {}
+      const banner = document.querySelector<HTMLElement>("[data-consent-banner]");
+      if (banner) banner.hidden = true;
+      document.dispatchEvent(new CustomEvent("bc:external-consent-granted"));
+    });
+  }
+</script>

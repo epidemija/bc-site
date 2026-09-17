@@ -1,0 +1,84 @@
+---
+/**
+ * Decorative "floor plan" pattern for section transitions: a thin fragment of
+ * a plan drawing — wall thicknesses as double lines, partitions with door
+ * openings and swings, a stair run, and a dimensioned chain underneath with
+ * its figures written out. It runs off both edges on purpose, so it reads as
+ * a detail cut out of a larger drawing rather than a small boxed-in
+ * illustration.
+ *
+ * One of the three drawing patterns: StepElevation is the elevation view,
+ * SurveyContour the site survey, this one the plan view. Same footprint, same
+ * edge fade, same stroke colour, so a section can swap one for another
+ * without any other change.
+ *
+ * Positioned as an absolute background layer by the caller's own `relative`
+ * wrapper; the band's content carries z-10 and is never drawn over. Shared
+ * styling (mask, dimension figures) lives in global.css § 8e — the figures
+ * are HTML because the SVG is stretched to the band width and would squash
+ * text out of shape.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div
+  class={`bc-pattern pointer-events-none absolute inset-x-0 top-0 h-40 w-full lg:h-48 ${className}`}
+  aria-hidden="true"
+>
+  <svg class="bc-pattern__svg" viewBox="0 0 1200 210" preserveAspectRatio="none" focusable="false">
+    <g stroke="var(--bc-border-strong)" stroke-width="1" fill="none">
+      {/* Outer walls, drawn with a wall thickness the way a plan draws them. */}
+      <g stroke-opacity="0.5">
+        <path d="M -60 46 H 1260 M -60 56 H 1260"></path>
+        <path d="M -60 150 H 1260 M -60 160 H 1260"></path>
+      </g>
+
+      {/* Partitions. Two carry a door opening with its swing. */}
+      <g stroke-opacity="0.36">
+        <path d="M 215 56 V 92 M 225 56 V 92"></path>
+        <path d="M 215 132 V 150 M 225 132 V 150"></path>
+        <path d="M 225 92 A 40 40 0 0 1 265 132" stroke-opacity="0.26"></path>
+        <path d="M 480 56 V 150 M 490 56 V 150"></path>
+        <path d="M 700 56 V 104 M 710 56 V 104"></path>
+        <path d="M 700 144 V 150 M 710 144 V 150"></path>
+        <path d="M 700 104 A 40 40 0 0 0 660 144" stroke-opacity="0.26"></path>
+        <path d="M 940 56 V 150 M 950 56 V 150"></path>
+      </g>
+
+      {/* Stair run with its direction arrow — the one figurative element. */}
+      <g stroke-opacity="0.28">
+        <path
+          d="M 745 70 V 136 M 766 70 V 136 M 787 70 V 136 M 808 70 V 136 M 829 70 V 136 M 850 70 V 136 M 871 70 V 136 M 892 70 V 136"
+        ></path>
+        <path d="M 745 103 H 905 M 897 97 L 905 103 L 897 109"></path>
+      </g>
+
+      {/* Dimension chain. It sits above the plan rather than below it — the
+          top of a band is the one strip that is always clear of the heading,
+          at every breakpoint, so the figures stay readable. Witness lines run
+          down towards the wall they measure; the two long bays break for
+          their figure, which is set as HTML below. */}
+      <g stroke-opacity="0.3">
+        <path
+          d="M 60 14 V 40 M 220 14 V 40 M 485 14 V 40 M 705 14 V 40 M 945 14 V 40 M 1140 14 V 40"
+        ></path>
+        <path d="M 60 22 H 220"></path>
+        <path d="M 220 22 H 316 M 390 22 H 485"></path>
+        <path d="M 485 22 H 705"></path>
+        <path d="M 705 22 H 788 M 862 22 H 945"></path>
+        <path d="M 945 22 H 1140"></path>
+        <path
+          d="M 68 18 L 60 22 L 68 26 M 212 18 L 220 22 L 212 26 M 228 18 L 220 22 L 228 26 M 477 18 L 485 22 L 477 26 M 493 18 L 485 22 L 493 26 M 697 18 L 705 22 L 697 26 M 713 18 L 705 22 L 713 26 M 937 18 L 945 22 L 937 26 M 953 18 L 945 22 L 953 26 M 1132 18 L 1140 22 L 1132 26"
+        ></path>
+      </g>
+    </g>
+  </svg>
+
+  {/* x/1200 and y/210 as percentages — the same proportions the stretched SVG
+      uses, so the figures stay on their dimension line at every width. */}
+  <span class="bc-pattern__dim" style="left: 29.4%; top: 10.5%">6,80 m</span>
+  <span class="bc-pattern__dim" style="left: 68.8%; top: 10.5%">5,40 m</span>
+</div>

@@ -1,0 +1,225 @@
+---
+/**
+ * Wave grid with an object card.
+ *
+ * A perspective mesh rippling in place, with a data card floating over it. Use
+ * it where a page needs to show that measurements turn into figures — an
+ * Aufmaß or Bestandsaufnahme section, a platform-style block, a page header
+ * that has no photograph.
+ *
+ * SELF-CONTAINED ON PURPOSE. The drawing code sits in this file's own script,
+ * not in a shared bundle, so the component can be dropped into any page — or
+ * carried into another project — without dragging anything else along. No
+ * library: the reference implementation this came from used three.js and a
+ * custom shader; this is a 2D canvas of about forty lines that looks the same
+ * at this size. Astro emits the script once no matter how many instances a
+ * page renders, and the script handles all of them.
+ *
+ * The graphic is decoration, so it is hidden from assistive technology and
+ * stops completely under `prefers-reduced-motion` — where the grid is simply
+ * not drawn and the card stands on the flat panel.
+ *
+ * The figures below are placeholders. Pass real ones through `rows` when the
+ * component is used on a page that states facts.
+ */
+interface Row {
+  label: string;
+  value: string;
+}
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  rows?: Row[];
+  /** The dotted bar row under the figures. Decorative. */
+  equalizer?: boolean;
+  class?: string;
+}
+
+const {
+  eyebrow = "Objektaufnahme",
+  title = "Reihenmittelhaus",
+  subtitle = "Speyer-West",
+  rows = [
+    { label: "Wohnfläche", value: "142,6 m²" },
+    { label: "Grundstück", value: "512 m²" },
+    { label: "Baujahr", value: "1978" },
+    { label: "Zustand", value: "gepflegt" },
+  ],
+  equalizer = true,
+  class: className = "",
+} = Astro.props;
+
+/** Bar heights, shaped so the row peaks in the middle. */
+const peaks = [
+  10, 15, 20, 15, 10, 15, 20, 15, 10, 15, 10, 5, 15, 25, 40, 55, 70, 85, 90, 95, 90, 85, 70, 55, 40,
+  25, 15, 10, 15, 20, 30, 20, 15, 10, 15, 20, 25, 15, 10, 15,
+];
+---
+
+<div
+  class={`wave-grid relative flex min-h-[520px] w-full flex-col items-center justify-center overflow-hidden bg-[#2f2f2f] pb-[15px] pt-[30px] ${className}`}
+>
+  {/* The mesh, faded towards the edges so the panel has no hard border. */}
+  <div class="wave-grid__canvas pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <canvas data-wave class="h-full w-full"></canvas>
+  </div>
+
+  {/* Rule-of-thirds overlay, the way a camera viewfinder draws it. */}
+  <div class="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
+    <div class="grid h-full w-full grid-cols-3 grid-rows-3 opacity-10">
+      {
+        Array.from({ length: 9 }).map((_, i) => (
+          <div
+            class={`${i % 3 < 2 ? "border-r border-white" : ""} ${Math.floor(i / 3) < 2 ? "border-b border-white" : ""}`}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="relative z-20 w-[280px] lg:w-[340px]">
+    <div class="rounded-md bg-[#111]/85 p-6 shadow-2xl backdrop-blur-sm">
+      {eyebrow && <p class="bc-eyebrow text-white/40">{eyebrow}</p>}
+      {title && <p class="mt-2 text-2xl text-white">{title}</p>}
+      {subtitle && <p class="text-sm text-white/50">{subtitle}</p>}
+
+      {
+        rows.length > 0 && (
+          <dl class="mt-6 grid grid-cols-2 gap-x-4 gap-y-3">
+            {rows.map((row) => (
+              <div>
+                <dt class="text-[11px] uppercase  text-white/40">{row.label}</dt>
+                <dd class="text-base text-white">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+
+      {
+        equalizer && (
+          <div class="mt-6 flex h-10 items-end justify-between gap-[3px] overflow-hidden" aria-hidden="true">
+            {peaks.map((peak, i) => (
+              <span
+                class="wave-grid__bar block flex-1 border-l-[3px] border-dotted border-white/80"
+                style={`--low:${Math.max(8, peak * 0.35)}%; --peak:${peak}%; animation-duration:${(0.5 + (i % 5) * 0.12).toFixed(2)}s; animation-delay:${((i % 7) * 0.08).toFixed(2)}s`}
+              />
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .wave-grid__canvas {
+    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 88%);
+    mask-image: radial-gradient(ellipse at center, black 35%, transparent 88%);
+  }
+
+  .wave-grid__bar {
+    height: var(--low);
+    opacity: 0.6;
+    animation-name: wave-grid-bar;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+  }
+  @keyframes wave-grid-bar {
+    to {
+      height: var(--peak);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wave-grid__bar {
+      animation: none;
+      height: var(--peak);
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * Draws the mesh: a flat grid projected into perspective, displaced by three
+   * summed sine waves so the ripple never repeats visibly.
+   *
+   * Rows further from the viewer are compressed towards the centre, which is
+   * what produces the depth without any 3D maths.
+   */
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>("[data-wave]")) {
+    if (reduced) continue;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) continue;
+
+    const COLS = 26;
+    const ROWS = 18;
+    let raf: number | null = null;
+    let width = 0;
+    let height = 0;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    const project = (cx: number, cy: number, t: number) => {
+      const u = cx / (COLS - 1);
+      const v = cy / (ROWS - 1);
+      const depth = 0.35 + v * 0.65;
+      const wave =
+        Math.sin(u * 7 + t) * 0.18 + Math.cos(v * 6 + t * 0.8) * 0.16 + Math.sin((u + v) * 5 - t) * 0.12;
+      return {
+        x: width / 2 + (u - 0.5) * width * 1.35 * depth,
+        y: height * 0.1 + v * height * 0.9 + wave * height * 0.1 * depth,
+      };
+    };
+
+    const draw = (now: number) => {
+      const t = now / 1400;
+      ctx.clearRect(0, 0, width, height);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      for (let r = 0; r < ROWS; r++) {
+        ctx.beginPath();
+        for (let c = 0; c < COLS; c++) {
+          const p = project(c, r, t);
+          c === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+      for (let c = 0; c < COLS; c++) {
+        ctx.beginPath();
+        for (let r = 0; r < ROWS; r++) {
+          const p = project(c, r, t);
+          r === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    // An off-screen canvas has no business holding a frame loop open.
+    new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && raf === null) raf = requestAnimationFrame(draw);
+        else if (!entry.isIntersecting && raf !== null) {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+      }
+    }).observe(canvas);
+  }
+</script>

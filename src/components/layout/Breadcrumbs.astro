@@ -1,0 +1,87 @@
+---
+/**
+ * Breadcrumb navigation.
+ *
+ * WHEN TO SHOW: on any page at least one level below the homepage — a
+ * top-level category (e.g. /gutachten/) as well as its subpages (e.g.
+ * /gutachten/immobilienbewertung/). Pass `force` to show the trail on a
+ * category page even though it has no ancestors of its own (config.breadcrumbs
+ * is empty there — only the current page needs to render). Legal/utility
+ * pages (Kontakt, FAQ, Impressum, Datenschutz) stay without a trail: they
+ * are not part of a category hierarchy, so "Startseite › Kontakt" repeats
+ * what the header nav already shows.
+ *
+ * The BreadcrumbList structured data is emitted separately in schema.ts and is
+ * worth having even where the visual trail is not: Google uses it to render
+ * the site hierarchy instead of a raw URL in search results.
+ *
+ * Visual style: the header's own logo badge (logo-bc-immowert-badge.svg)
+ * marks the "Startseite" crumb instead of a generic house icon, inlined and
+ * recoloured to currentColor — same muted grey as the rest of the trail by
+ * default, same gold-on-hover as the text next to it — rather than its
+ * usual fixed gold, so it reads as part of the trail instead of a stray
+ * accent. Chevron icons separate the crumbs instead of a "›" character.
+ */
+import { PAGES, type PageConfig } from "../../config/pages";
+import { breadcrumbLabel } from "../../seo/schema";
+import Icon from "../ui/Icon.astro";
+
+interface Props {
+  page: keyof typeof PAGES;
+  force?: boolean;
+}
+const { page, force = false } = Astro.props;
+const config: PageConfig = PAGES[page];
+const trail = config.breadcrumbs ?? [];
+
+// A subpage always has a trail to show. A category page has none of its own
+// (it IS the first level) but still shows when `force` is set.
+const visible = trail.length > 0 || force;
+---
+
+{
+  visible && (
+    <nav aria-label="Brotkrümelnavigation" class="mx-auto w-full max-w-[1400px] px-5 pt-6 lg:px-8">
+      <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-muted">
+        <li>
+          <a href="/" class="inline-flex items-center gap-1.5 transition-colors hover:text-accent">
+            <svg
+              class="h-3.5 w-auto shrink-0"
+              viewBox="0 0 33.75 38.25"
+              fill="currentColor"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M33.26,15.13l-9.33-8.17V.51C23.93.23,23.7,0,23.41,0s-.51.23-.51.51v5.55l-5.71-5c-.19-.17-.48-.17-.67,0L.18,15.12c-.21.18-.24.51-.05.72.1.12.25.18.39.18.12,0,.24-.04.33-.12L16.85,2.13l6.05,5.29v24.02c0,.28.23.51.51.51s.51-.23.51-.51V8.32l8.66,7.57c.21.19.54.16.72-.05.19-.21.16-.54-.05-.73Z" />
+              <path d="M3.66,18.17c-.28,0-.51.23-.51.51v5.09c0,.28.23.51.51.51s.51-.23.51-.51v-5.09c0-.28-.23-.51-.51-.51Z" />
+              <path d="M30.04,18.17c-.28,0-.51.23-.51.51v5.09c0,.28.23.51.51.51s.51-.23.51-.51v-5.09c0-.28-.23-.51-.51-.51Z" />
+              <path d="M10.22,12.14c-.28,0-.51.23-.51.51v16.74c0,.28.23.51.51.51s.51-.23.51-.51V12.66c0-.28-.23-.51-.51-.51Z" />
+              <path d="M16.72,7.97c-.28,0-.51.23-.51.51v28.93c0,.28.23.51.51.51s.51-.23.51-.51V8.48c0-.28-.23-.51-.51-.51Z" />
+            </svg>
+            Startseite
+          </a>
+        </li>
+        {trail.map((crumb) => (
+          <>
+            <li aria-hidden="true" class="flex items-center opacity-50">
+              <Icon name="chevron-right" class="h-3.5 w-3.5" />
+            </li>
+            <li>
+              <a href={crumb.path} class="transition-colors hover:text-accent">
+                {crumb.name}
+              </a>
+            </li>
+          </>
+        ))}
+        <li aria-hidden="true" class="flex items-center opacity-50">
+          <Icon name="chevron-right" class="h-3.5 w-3.5" />
+        </li>
+        <li>
+          <span aria-current="page" class="text-ink">
+            {breadcrumbLabel(config)}
+          </span>
+        </li>
+      </ol>
+    </nav>
+  )
+}

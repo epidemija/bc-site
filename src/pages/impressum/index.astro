@@ -1,0 +1,120 @@
+---
+/**
+ * Impressum — §5 DDG (formerly §5 TMG) and §18 MStV.
+ *
+ * Content matches Bojan's own reference Impressum verbatim (provided
+ * 10.09.2026) — no VAT/Steuernummer, chamber/Berufsrecht or
+ * Berufshaftpflichtversicherung section. Those would normally be expected
+ * given the "Bauingenieur"/"Sachverständiger" wording below (§5 Abs. 1
+ * Nr. 5 DDG, § 2 Abs. 1 Nr. 11 DL-InfoV), and Bojan was told so explicitly
+ * before confirming this shorter version — his call to make, not something
+ * to second-guess here. See `legal.profession`/`legal.insurance` in
+ * site.ts for the fields kept (unused) in case he adds them back later.
+ *
+ * Not legal advice — a Fachanwalt should read this once before the domain is
+ * switched over.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+import Prose from "../../components/layout/Prose.astro";
+import LegalAccordionItem from "../../components/ui/LegalAccordionItem.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema } from "../../seo/schema";
+import { ORGANISATION as site, SITE_URL, legal, routes } from "../../config/site";
+
+const page = PAGES.impressum;
+const jsonLd = subpageSchema(page, []);
+const { address } = site;
+---
+
+<BaseLayout page="impressum" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Impressum"
+    subtitle="Angaben gemäß § 5 DDG"
+    image={heroImage}
+    imageAlt="Speyerer Dom bei Sonnenuntergang – BC IMMOWERT, Speyer"
+  />
+
+  <Breadcrumbs page="impressum" />
+
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8">
+    <Prose wide>
+      <div class="bc-legal-static grid gap-8 sm:grid-cols-2">
+        <div>
+          <h2 class="!mt-0">Diensteanbieter</h2>
+          <address>
+            {legal.owner}<br />
+            {address.street}<br />
+            {address.postalCode} {address.city}<br />
+            {address.countryName}
+          </address>
+          <p class="!mt-4 text-sm">{legal.activity}</p>
+        </div>
+        <div>
+          <h2 class="!mt-0">Kontakt</h2>
+          <dl>
+            <dt>Telefon</dt>
+            <dd><a href={`tel:${site.phoneE164}`}>{site.phone}</a></dd>
+            <dt>E-Mail</dt>
+            <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+            <dt>Website</dt>
+            <dd>{SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "")}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="bc-legal-grid !mt-10" data-legal-accordion>
+        <LegalAccordionItem title="Zertifizierungen" open>
+          <ul class="!mt-0 list-none p-0">
+            {legal.certifications.map((entry) => (
+              <li>{entry}</li>
+            ))}
+          </ul>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="Verantwortlich für journalistisch-redaktionelle Inhalte">
+          <p>Verantwortlich gemäß § 18 Abs. 2 MStV:</p>
+          <address>
+            {legal.owner}<br />
+            {address.street}<br />
+            {address.postalCode} {address.city}
+          </address>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="Verbraucherstreitbeilegung">
+          <p>
+            Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer
+            Verbraucherschlichtungsstelle teilzunehmen.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="Urheberrecht">
+          <p>
+            Die auf dieser Website veröffentlichten Inhalte, Texte, Bilder und Grafiken unterliegen,
+            soweit anwendbar, dem deutschen Urheberrecht. Eine Verwendung außerhalb der gesetzlichen
+            Schranken des Urheberrechts bedarf der Zustimmung des jeweiligen Rechteinhabers.
+          </p>
+        </LegalAccordionItem>
+
+        <LegalAccordionItem title="Datenschutz">
+          <p>
+            Wie wir mit personenbezogenen Daten umgehen, steht in unserer{" "}
+            <a href={routes.datenschutz}>Datenschutzerklärung</a>.
+          </p>
+        </LegalAccordionItem>
+      </div>
+
+      <div class="mt-10 rounded-sm border border-[color:var(--bc-border)] bg-[color:var(--bc-surface-subtle)] px-4 py-3">
+        <p class="!mt-0 text-sm text-muted">
+          Diese Seite befindet sich aktuell in anwaltlicher Prüfung.
+        </p>
+      </div>
+
+      <div class="bc-legal-static !mt-6">
+        <p class="!mt-0 text-sm">Stand: {legal.lastUpdated.split("-").reverse().join(".")}</p>
+      </div>
+    </Prose>
+  </section>
+</BaseLayout>

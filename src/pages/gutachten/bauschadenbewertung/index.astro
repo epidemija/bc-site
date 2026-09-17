@@ -1,0 +1,251 @@
+---
+/**
+ * Bauschadensbewertung — service page, second level.
+ *
+ * Same skeleton as its sibling /gutachten/immobilienbewertung/: photographic
+ * header (an individual service, §5d), one <h1>, an <h2> per section, a visible
+ * breadcrumb trail, metadata from src/config/pages.ts.
+ *
+ * No price section: the office has not published fixed starting prices for
+ * damage assessments, and inventing them would be worse than leaving the
+ * question to the enquiry. The closing block asks for the enquiry instead.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import StepElevation from "../../../components/ui/StepElevation.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_GUTACHTEN } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-bauschadenbewertung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.bauschadenbewertung;
+
+/* ------------------------------------------------------------- content */
+
+/** What the office actually does in this field. */
+const leistungen = [
+  {
+    name: "Untersuchung und Bewertung von Bauschäden und Baumängeln",
+    text: "Erfassung des Schadensbildes und Einordnung, ob ein Mangel der Ausführung, ein Schaden am Bestand oder beides vorliegt.",
+  },
+  {
+    name: "Feuchtigkeits- und Wasserschäden",
+    text: "Feuchtemessungen und Beurteilung des Feuchteeintrags — von aufsteigender Feuchte bis zum Leitungswasserschaden.",
+  },
+  {
+    name: "Schimmel und mögliche Feuchteursachen",
+    text: "Beurteilung von Schimmelbefall und Rückverfolgung auf die zugrundeliegende Feuchtequelle.",
+  },
+  {
+    name: "Risse an Wänden, Decken und Fassaden",
+    text: "Beurteilung von Rissbildern nach Verlauf, Breite und Entwicklung, und was sie über die Ursache aussagen.",
+  },
+  {
+    name: "Prüfung baulicher Auffälligkeiten",
+    text: "Einordnung, ob eine Auffälligkeit auf einen Mangel der Ausführung oder einen Schaden am Bestand hindeutet.",
+  },
+  {
+    name: "Ursachenanalyse und Schadensbewertung",
+    text: "Rückverfolgung bis zur Ursache und Bewertung des Schadensumfangs als Grundlage für die Instandsetzung.",
+  },
+  {
+    name: "Fotodokumentation und schriftliche Stellungnahme",
+    text: "Nachvollziehbare Dokumentation, die auch von Dritten geprüft werden kann.",
+  },
+];
+
+/**
+ * When an assessment is worth commissioning. The lead-in sentence below carries
+ * the "bei", which is what these entries grammatically hang from.
+ */
+const anlaesse = [
+  "Bei sichtbaren Schäden oder baulichen Auffälligkeiten",
+  "Bei Feuchtigkeit, Schimmel oder Wasserschäden",
+  "Bei Rissen an Wänden, Decken oder Fassaden",
+  "Bei Problemen nach Bau- oder Sanierungsarbeiten",
+  "Bei Unklarheiten über die Ursache eines Schadens",
+  "Vor dem Kauf einer Immobilie bei auffälligen Schadensbildern",
+];
+
+const vorteile = [
+  "Unabhängige Beurteilung des Schadens",
+  "Ursachenorientierte Untersuchung statt reiner Symptombetrachtung",
+  "Verständliche Erklärung der Ergebnisse",
+  "Konkrete Empfehlungen für das weitere Vorgehen",
+  "Persönlicher Ansprechpartner von der Besichtigung bis zur Besprechung",
+];
+
+/** Same FactGrid pattern as /gutachten/immobilienbewertung/ — one shared
+ * card grid instead of a dl-based Leistungen section plus a separate
+ * two-column anlaesse/vorteile section. */
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Leistungen im Bereich Bauschadensbewertung",
+    items: leistungen.map((l) => l.name),
+  },
+  {
+    icon: "target",
+    title: "Wann ist eine Bauschadensbewertung sinnvoll?",
+    items: anlaesse,
+  },
+  {
+    icon: "award",
+    title: "Ihr Vorteil",
+    items: vorteile,
+  },
+];
+
+/** How a Bauschadensbewertung runs — specific to this page, not the
+ * shared ABLAUF_GUTACHTEN, because a damage assessment starts from a
+ * described problem rather than a valuation purpose. */
+const steps = [
+  {
+    icon: "phone",
+    title: "Erstgespräch",
+    text: "Sie schildern uns den Schaden oder die Auffälligkeit. Fotos und vorhandene Unterlagen können Sie uns bereits vorab zusenden.",
+  },
+  {
+    icon: "document",
+    title: "Sichtung der Unterlagen",
+    text: "Soweit vorhanden, prüfen wir Bauunterlagen, Grundrisse, Fotos, Entwässerungspläne oder bereits durchgeführte Maßnahmen.",
+  },
+  {
+    icon: "building",
+    title: "Untersuchung vor Ort",
+    text: "Wir besichtigen die betroffenen Bereiche, dokumentieren das Schadensbild und untersuchen mögliche Ursachen und Zusammenhänge.",
+  },
+  {
+    icon: "analysis",
+    title: "Auswertung",
+    text: "Die Erkenntnisse aus Besichtigung und Unterlagen werden zusammengeführt und fachlich eingeordnet.",
+  },
+  {
+    icon: "report",
+    title: "Stellungnahme & Besprechung",
+    text: "Sie erhalten eine schriftliche Stellungnahme mit den wesentlichen Feststellungen und Empfehlungen zum weiteren Vorgehen. Anschließend besprechen wir die Ergebnisse persönlich mit Ihnen.",
+  },
+] satisfies typeof ABLAUF_GUTACHTEN;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("bauschadenbewertung")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Bauschadensbewertung",
+      description:
+        "Fachliche Bewertung von Bauschäden und Baumängeln: Ursachenanalyse, Feuchte- und " +
+        "Rissbeurteilung, Fotodokumentation und schriftliche Stellungnahme durch einen " +
+        "Bauingenieur und DEKRA-zertifizierten Sachverständigen.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf einer Bauschadensbewertung",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="bauschadenbewertung" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Bauschadensbewertungen"
+    subtitle={["Bauschäden erkennen", "Ursachen untersuchen", "Maßnahmen ableiten"]}
+    image={heroImage}
+    imageAlt="Sachverständiger bei der Begutachtung eines Bauschadens an einer Gebäudewand"
+  />
+
+  <Breadcrumbs page="bauschadenbewertung" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Klarheit über Ursache, Umfang und Maßnahmen
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Feuchtigkeit, Schimmel, Risse oder andere Schäden am Gebäude können unterschiedliche
+          Ursachen haben. Entscheidend ist deshalb, nicht nur das sichtbare Schadensbild zu
+          betrachten, sondern herauszufinden, wodurch es entstanden ist.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Als Bauingenieur (B. Eng.) und DEKRA-zertifizierter Sachverständiger für
+          Bauschadensbewertung untersuchen wir die betroffenen Bereiche vor Ort, beziehen
+          vorhandene Bauunterlagen in die Bewertung ein und zeigen Ihnen auf, welche weiteren
+          Untersuchungen oder Maßnahmen sinnvoll sind.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Sachverständiger bei der Begutachtung eines Bauschadens an einer Gebäudewand"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Überblick ----------------
+      Same FactGrid pattern as /gutachten/immobilienbewertung/: one shared
+      card grid instead of a dl-based Leistungen section plus a separate
+      two-column anlaesse/vorteile section. No visible eyebrow/heading —
+      three self-explanatory cards need no section title above them; kept
+      as a screen-reader-only heading so the section still has a real
+      accessible name. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <StepElevation />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Leistungen, Anlass und Ihr Vorteil auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" heading="Ablauf Bauschadensbewertung" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="bauschadenbewertung" eyebrow="" />
+
+  <ClosingCta heading="Schaden entdeckt? Schildern Sie ihn uns" text="Beschreiben Sie uns, was Sie festgestellt haben – gerne auch mit Fotos. Wir schauen uns Ihr Anliegen an und melden uns persönlich bei Ihnen, um das weitere Vorgehen und den zu erwartenden Aufwand zu besprechen." buttonHref={routes.kontakt} />
+</BaseLayout>

@@ -1,0 +1,125 @@
+---
+/**
+ * The master layout. Every page in the site renders through this file, which
+ * is what guarantees no page can ship without a canonical URL, structured data
+ * or the shared header and footer.
+ *
+ * A page supplies only its key from src/config/pages.ts; all metadata is
+ * derived from that registry.
+ */
+import { PAGES, type PageConfig } from "../config/pages";
+import { buildHead } from "../seo/head";
+import { SITE_LANG } from "../config/site";
+import SiteHeader from "../components/layout/SiteHeader.astro";
+import SiteFooter from "../components/layout/SiteFooter.astro";
+import ConsentBanner from "../components/ui/ConsentBanner.astro";
+import PdfLightbox from "../components/ui/PdfLightbox.astro";
+import "../styles/global.css";
+
+interface Props {
+  /** Key into PAGES. */
+  page: keyof typeof PAGES;
+  /** JSON-LD graph for this page, already serialised. */
+  jsonLd: string;
+  /** "overlay" only where the header sits on a full-bleed hero image. */
+  headerVariant?: "overlay" | "solid";
+  /** Preload descriptor for the LCP image, if the page has one. */
+  lcp?: { href: string; srcset?: string; sizes?: string; type?: string };
+}
+
+const { page: pageKey, jsonLd, headerVariant = "solid", lcp } = Astro.props;
+const page: PageConfig = PAGES[pageKey];
+const headTags = buildHead(page);
+
+/**
+ * Google Analytics (GA4) — opt-in only. Unset in .env by default, so by
+ * default no marker renders, the consent banner stays inert and nothing
+ * analytics-related ever touches the page. Set PUBLIC_GA4_MEASUREMENT_ID to
+ * switch it on; loading itself still waits for consent (see site.js).
+ */
+const GA4_MEASUREMENT_ID = import.meta.env.PUBLIC_GA4_MEASUREMENT_ID;
+---
+
+<!doctype html>
+<html lang={SITE_LANG} class="no-js">
+  <head>
+    {
+      headTags.map((t) =>
+        t.tag === "title" ? (
+          <title set:text={t.text} />
+        ) : t.tag === "meta" ? (
+          <meta {...t.attrs} />
+        ) : (
+          <link {...t.attrs} />
+        )
+      )
+    }
+
+    {/*
+      The LCP image is preloaded with imagesrcset so the browser fetches the
+      same candidate it will render — a phone must not download the desktop
+      file it never displays.
+    */}
+    {
+      lcp && (
+        <link
+          rel="preload"
+          as="image"
+          href={lcp.href}
+          imagesrcset={lcp.srcset}
+          imagesizes={lcp.sizes}
+          type={lcp.type}
+          fetchpriority="high"
+        />
+      )
+    }
+
+    {/*
+      Fonts are referenced from CSS, so the browser only discovers them after
+      the stylesheet parses. Preloading starts them in the first round trip.
+    */}
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-variable.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/manrope-latin-variable.woff2" crossorigin />
+
+    <script type="application/ld+json" set:html={jsonLd} is:inline />
+
+    {/*
+      Applies the stored theme before the first paint, so a visitor who chose
+      the dark theme never sees a flash of the light one. Inline and tiny by
+      necessity — it must run before the body renders.
+    */}
+    <script is:inline>
+      document.documentElement.classList.remove("no-js");
+      try {
+        if (localStorage.getItem("bc-theme") === "dark")
+          document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <SiteHeader variant={headerVariant} currentPath={page.path} />
+
+    <main id="inhalt" class="min-h-screen bg-page font-sans text-secondary">
+      <slot />
+    </main>
+
+    <SiteFooter />
+
+    {
+      /*
+        The gate site.js looks for. Present only when GA4 is actually
+        configured — carries the measurement ID as data so site.js never
+        needs its own env-var access (it's a plain script, not a module).
+      */
+    }
+    {GA4_MEASUREMENT_ID && <div hidden data-external-embed data-ga4-id={GA4_MEASUREMENT_ID} />}
+
+    <ConsentBanner />
+    <PdfLightbox />
+
+    <script src="../scripts/site.js"></script>
+  </body>
+</html>

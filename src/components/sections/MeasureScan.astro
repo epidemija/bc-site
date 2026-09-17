@@ -1,0 +1,262 @@
+---
+/**
+ * Animated survey: a room is measured on site and becomes a set of documents.
+ *
+ * That is the whole point of this branch of services — an Aufmaß is not the
+ * product, the paperwork it produces is. So the graphic runs left to right: a
+ * measuring device fires at the walls, the dimensions and the area appear, and
+ * three sheets stack up on the right with the names of the documents actually
+ * delivered.
+ *
+ * Inline SVG plus CSS keyframes — no library, no JavaScript, decorative and
+ * hidden from assistive technology, stopped by `prefers-reduced-motion` with
+ * the finished picture on screen.
+ *
+ * The dimensions shown are an illustrative room, in the same spirit as the
+ * floor plan on Über uns. Nothing here is a figure about a client's property —
+ * but the numbers still have to agree with each other: 6,40 x 4,80 m minus the
+ * notch of 0,73 x 2,15 m is 29,2 m². A plan whose own figures do not add up is
+ * the last thing this office should be showing.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+/** The three documents produced from one survey, in delivery order. */
+const sheets = [
+  { label: "Grundriss", note: "maßstabsgetreu" },
+  { label: "Wohnfläche", note: "nach WoFlV" },
+  { label: "Nutzfläche", note: "nach DIN 277" },
+];
+---
+
+<div class={`ms ${className}`} aria-hidden="true">
+  <svg viewBox="0 0 520 300" class="ms-svg w-full" role="presentation">
+    <defs>
+      <pattern id="ms-grid" width="13" height="13" patternUnits="userSpaceOnUse">
+        <path d="M13 0H0V13" fill="none" stroke="currentColor" stroke-width="0.4" opacity="0.14"></path>
+      </pattern>
+    </defs>
+
+    <rect x="20" y="34" width="216" height="200" fill="url(#ms-grid)"></rect>
+
+    {/* ---- The room: an L-shape, because a rectangle measures itself ---- */}
+    <path
+      class="ms-room"
+      d="M40 60H196V128H216V212H40Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    ></path>
+
+    {/* ---- The measuring device and its beams ---- */}
+    <circle class="ms-device" cx="62" cy="192" r="5"></circle>
+    <g class="ms-beams">
+      <line class="ms-beam" style="--i:0" x1="62" y1="192" x2="62" y2="62"></line>
+      <line class="ms-beam" style="--i:1" x1="62" y1="192" x2="194" y2="66"></line>
+      <line class="ms-beam" style="--i:2" x1="62" y1="192" x2="214" y2="150"></line>
+      <line class="ms-beam" style="--i:3" x1="62" y1="192" x2="214" y2="210"></line>
+    </g>
+
+    {/* ---- Dimensions, the way a measured drawing carries them ---- */}
+    <g class="ms-dim ms-dim--w" style="--i:0">
+      <line x1="40" y1="228" x2="216" y2="228"></line>
+      <line x1="40" y1="222" x2="40" y2="234"></line>
+      <line x1="216" y1="222" x2="216" y2="234"></line>
+      <text x="128" y="223" text-anchor="middle">6,40 m</text>
+    </g>
+    <g class="ms-dim ms-dim--h" style="--i:1">
+      <line x1="28" y1="60" x2="28" y2="212"></line>
+      <line x1="22" y1="60" x2="34" y2="60"></line>
+      <line x1="22" y1="212" x2="34" y2="212"></line>
+      <text x="24" y="140" text-anchor="middle" transform="rotate(-90 24 140)">4,80 m</text>
+    </g>
+    <text class="ms-area" x="128" y="146" text-anchor="middle">29,2 m²</text>
+
+    {/* ---- From survey to paperwork ---- */}
+    <path class="ms-arrow" d="M256 140H300" fill="none" stroke-width="1.5"></path>
+    <path class="ms-arrow" d="M292 134l8 6-8 6" fill="none" stroke-width="1.5"></path>
+
+    {/* ---- The documents ---- */}
+    {
+      sheets.map((sheet, i) => (
+        <g class="ms-sheet" style={`--i:${i}`}>
+          <rect x={320} y={54 + i * 68} width="176" height="54" rx="4" />
+          <path
+            d={`M336 ${72 + i * 68}h28M336 ${82 + i * 68}h18`}
+            class="ms-sheet-lines"
+            fill="none"
+            stroke-width="1.4"
+          />
+          <text x={378} y={77 + i * 68} class="ms-sheet-label">
+            {sheet.label}
+          </text>
+          <text x={378} y={92 + i * 68} class="ms-sheet-note">
+            {sheet.note}
+          </text>
+          <path
+            d={`M468 ${78 + i * 68}l5 5 9-10`}
+            class="ms-sheet-check"
+            fill="none"
+            stroke-width="2"
+          />
+        </g>
+      ))
+    }
+  </svg>
+</div>
+
+<style>
+  .ms {
+    color: currentColor;
+  }
+  .ms-svg {
+    overflow: visible;
+  }
+
+  /* The room draws itself first; everything else follows from it. */
+  .ms-room {
+    stroke-dasharray: 700;
+    stroke-dashoffset: 700;
+    animation: ms-draw 1.6s ease-out forwards;
+  }
+
+  .ms-device {
+    fill: var(--bc-accent-deco);
+    opacity: 0;
+    animation: ms-fade 0.4s ease-out 1.4s forwards;
+  }
+
+  /* Each beam shoots out, then the set keeps pulsing so the graphic stays
+     alive without redrawing the whole room. */
+  .ms-beam {
+    stroke: var(--bc-accent-deco);
+    stroke-width: 1.2;
+    stroke-dasharray: 260;
+    stroke-dashoffset: 260;
+    opacity: 0.85;
+    animation:
+      ms-shoot 0.7s ease-out forwards,
+      ms-pulse 4s ease-in-out infinite;
+    animation-delay: calc(1.6s + var(--i) * 0.22s), calc(3.6s + var(--i) * 0.22s);
+  }
+
+  .ms-dim line {
+    stroke: var(--bc-accent-deco);
+    stroke-width: 1;
+  }
+  .ms-dim text {
+    fill: var(--bc-accent-deco);
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ms-dim {
+    opacity: 0;
+    animation: ms-fade 0.5s ease-out forwards;
+    animation-delay: calc(2.6s + var(--i) * 0.2s);
+  }
+
+  .ms-area {
+    fill: currentColor;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    animation: ms-fade 0.6s ease-out 3.1s forwards;
+  }
+
+  .ms-arrow {
+    stroke: var(--bc-accent-deco);
+    opacity: 0;
+    animation: ms-fade 0.5s ease-out 3.4s forwards;
+  }
+
+  /* Sheets slide in from the right, one after another. */
+  .ms-sheet {
+    opacity: 0;
+    transform: translateX(26px);
+    animation: ms-slide 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: calc(3.6s + var(--i) * 0.28s);
+  }
+  .ms-sheet rect {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    opacity: 0.65;
+  }
+  .ms-sheet-lines {
+    stroke: currentColor;
+    opacity: 0.4;
+  }
+  .ms-sheet-label {
+    fill: currentColor;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .ms-sheet-note {
+    fill: currentColor;
+    opacity: 0.6;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 10px;
+    
+  }
+  .ms-sheet-check {
+    stroke: var(--bc-accent-deco);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @keyframes ms-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ms-fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ms-shoot {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ms-pulse {
+    0%,
+    100% {
+      opacity: 0.85;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+  @keyframes ms-slide {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Decoration only: at rest the finished survey and its documents are shown. */
+  @media (prefers-reduced-motion: reduce) {
+    .ms-room,
+    .ms-device,
+    .ms-beam,
+    .ms-dim,
+    .ms-area,
+    .ms-arrow,
+    .ms-sheet {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+      transform: none;
+    }
+    .ms-beam {
+      opacity: 0.5;
+    }
+  }
+</style>

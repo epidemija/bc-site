@@ -1,0 +1,130 @@
+---
+/**
+ * Full-bleed floor-plan line drawing for a dark statement band — the same
+ * drawing idea as FloorPlanLines (outer walls as double lines, partitions
+ * with door swings, a stair run, a dimension chain), but stretched to cover
+ * the whole band rather than a thin strip at one edge, stroked softly
+ * enough to read as texture rather than a diagram, and stroked in a tone
+ * that survives a dark background (FloorPlanLines' --bc-border-strong is
+ * tuned for the light page and all but disappears here).
+ *
+ * Room names and dimension figures are HTML, not SVG text — same reason as
+ * FloorPlanLines: the SVG is stretched with preserveAspectRatio="none",
+ * which would squash any <text> inside it out of shape. Positioned in
+ * percentages of the same 1400×480 box the SVG uses, so a label stays put
+ * at every viewport width.
+ *
+ * Positioned as an absolute background layer by the caller's own `relative`
+ * wrapper; the band's content carries z-10 and is never drawn over. Shares
+ * .bc-pattern's left/right edge fade (global.css § 8e) so it doesn't end
+ * abruptly at the section's edges.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div
+  class={`bc-pattern pointer-events-none absolute inset-0 h-full w-full ${className}`}
+  aria-hidden="true"
+>
+  <svg
+    class="bc-pattern__svg"
+    viewBox="0 0 1400 480"
+    preserveAspectRatio="none"
+    focusable="false"
+  >
+    <g stroke="var(--bc-accent-deco)" stroke-width="1" fill="none">
+      {/* Outer walls — a plan's wall thickness drawn as a double line, run
+          off all four edges so it reads as a fragment of a larger drawing. */}
+      <g stroke-opacity="0.22">
+        <path d="M -40 60 H 1440 M -40 72 H 1440"></path>
+        <path d="M -40 408 H 1440 M -40 420 H 1440"></path>
+        <path d="M 130 -20 V 500 M 142 -20 V 500"></path>
+        <path d="M 1180 -20 V 500 M 1192 -20 V 500"></path>
+      </g>
+
+      {/* Partitions, three with a door opening and swing. */}
+      <g stroke-opacity="0.16">
+        <path d="M 142 72 V 176 M 154 72 V 176"></path>
+        <path d="M 142 216 V 408 M 154 216 V 408"></path>
+        <path d="M 154 176 A 40 40 0 0 1 194 216" stroke-opacity="0.12"></path>
+
+        <path d="M 430 72 V 408 M 442 72 V 408"></path>
+
+        <path d="M 700 72 V 240 M 712 72 V 240"></path>
+        <path d="M 700 280 V 408 M 712 280 V 408"></path>
+        <path d="M 712 240 A 40 40 0 0 0 752 280" stroke-opacity="0.12"></path>
+
+        <path d="M 940 72 V 408 M 952 72 V 408"></path>
+
+        <path d="M 1180 240 H 1080 M 1180 252 H 1080" stroke-opacity="0.16"></path>
+        <path d="M 1080 252 A 36 36 0 0 0 1044 288" stroke-opacity="0.12"></path>
+      </g>
+
+      {/* Stair run with its direction arrow. */}
+      <g stroke-opacity="0.13">
+        <path
+          d="M 500 120 V 340 M 526 120 V 340 M 552 120 V 340 M 578 120 V 340 M 604 120 V 340 M 630 120 V 340 M 656 120 V 340"
+        ></path>
+        <path d="M 500 230 H 656 M 646 222 L 656 230 L 646 238"></path>
+      </g>
+
+      {/* A second, quieter room fragment on the right so the drawing doesn't
+          read as one box in the middle of an empty field. */}
+      <g stroke-opacity="0.11">
+        <path d="M 990 130 H 1180 M 990 142 H 1180"></path>
+        <path d="M 990 350 H 1180 M 990 362 H 1180"></path>
+      </g>
+
+      {/* Dimension chain along the top, same convention as FloorPlanLines:
+          witness lines down to the wall, a chain line, arrow ticks. */}
+      <g stroke-opacity="0.16">
+        <path d="M 142 16 V 40 M 430 16 V 40 M 700 16 V 40 M 940 16 V 40"></path>
+        <path d="M 142 24 H 430"></path>
+        <path d="M 700 24 H 940"></path>
+        <path
+          d="M 150 20 L 142 24 L 150 28 M 422 20 L 430 24 L 422 28 M 708 20 L 700 24 L 708 28 M 932 20 L 940 24 L 932 28"
+        ></path>
+      </g>
+    </g>
+  </svg>
+
+  {/* x/1400 and y/480 as percentages — proportional to the same box the
+      stretched SVG uses. */}
+  <span class="fpld__dim" style="left: 20.4%; top: 5%">2,90 m</span>
+  <span class="fpld__dim" style="left: 58.6%; top: 5%">2,40 m</span>
+
+  <span class="fpld__room" style="left: 20.5%; top: 52%">Wohnzimmer</span>
+  <span class="fpld__room" style="left: 77.5%; top: 33%">Küche</span>
+  <span class="fpld__room" style="left: 79.5%; top: 68%">Bad</span>
+</div>
+
+<style>
+  /* Same idea as .bc-pattern__dim (global.css § 8e), recoloured for a dark
+     band — that class's --bc-ink-muted is tuned for the light page and
+     would be nearly invisible here. */
+  .fpld__dim,
+  .fpld__room {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: "Jost", "Manrope", sans-serif;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--bc-accent-deco);
+  }
+  .fpld__dim {
+    font-size: 0.6875rem; /* 11px */
+    letter-spacing: 0.02em;
+    opacity: 0.32;
+  }
+  .fpld__room {
+    font-size: 0.75rem; /* 12px */
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.2;
+  }
+</style>

@@ -1,0 +1,131 @@
+---
+/**
+ * Consent gate for third-party embeds. Nothing external loads until the
+ * visitor accepts here — declining is remembered exactly as durably as
+ * accepting, so the banner asks once, not on every visit.
+ *
+ * Generic on purpose: not named after any single embed, because this is the
+ * one gate every opt-in third-party feature reuses. It currently covers
+ * Google Analytics (GA4, see BaseLayout.astro, gated behind
+ * PUBLIC_GA4_MEASUREMENT_ID), the OpenStreetMap embed on Kontakt
+ * (MapEmbed.astro) and the Datawrapper coverage-area chart
+ * (DatawrapperEmbed.astro) — one "Akzeptieren" unlocks all three at once,
+ * rather than asking separately per embed. The matching logic lives in
+ * src/scripts/site.js, and it only shows this banner at all when the
+ * current page actually has a `[data-external-embed]` element waiting on
+ * it — so a page with none of the above stays inert and nobody is asked to
+ * consent to a feature that isn't there.
+ *
+ * A floating card, not a full-width bar: it sits over the corner of the page
+ * rather than displacing content, and reads as one deliberate object (icon,
+ * short explanation, two equal actions) instead of a strip of fine print.
+ * Only two actions exist — Akzeptieren / Ablehnen — because that is the only
+ * choice this site actually offers (one binary opt-in covering the embeds
+ * above, documented in Datenschutzerklärung §9, §11, §12 and on
+ * /cookies/). A third "Cookie-Einstellungen" action is deliberately absent
+ * here: that choice lives on its own page (/cookies/) instead, reachable
+ * from the footer and from this banner's link below.
+ */
+import Icon from "./Icon.astro";
+import Button from "./Button.astro";
+---
+
+<div class="consent-banner" hidden data-consent-banner>
+  <div class="consent-banner__card">
+    <Icon name="cookie" class="h-7 w-7 shrink-0 mt-0.5 text-accent" />
+    <div class="consent-banner__body">
+      <h2 class="consent-banner__title">Wir verwenden Cookies</h2>
+      <p class="consent-banner__text">
+        Für einzelne Funktionen (z. B. Kartendarstellungen oder Reichweitenmessung) binden wir,
+        nur mit Ihrer Zustimmung, externe Anbieter ein. Details in den{" "}
+        <a href="/cookies/">Cookie-Einstellungen</a>.
+      </p>
+      <div class="consent-banner__actions">
+        {/* Ghost, not secondary: the only variant the audit's "every CTA
+            carries the same arrow" rule exempts, which also happens to suit a
+            decline action better than a forward-pointing arrow would. */}
+        <Button type="button" variant="ghost" data-consent-decline>
+          Ablehnen
+        </Button>
+        <Button type="button" variant="primary" data-consent-accept>
+          Akzeptieren
+        </Button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .consent-banner {
+    position: fixed;
+    inset-inline: var(--space-md);
+    bottom: var(--space-md);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+  }
+  @media (min-width: 640px) {
+    .consent-banner {
+      inset-inline: var(--space-lg);
+      justify-content: flex-start;
+    }
+  }
+
+  .consent-banner__card {
+    display: flex;
+    gap: var(--space-md);
+    width: 100%;
+    max-width: 26rem;
+    padding: var(--space-lg);
+    background-color: var(--bc-surface);
+    border: 1px solid var(--bc-border);
+    border-radius: var(--radius-lg);
+    /* The one shadow this site's cards don't otherwise carry (structure
+       elsewhere comes from a hairline, not a shadow — see design notes):
+       this card floats fixed above page content rather than sitting inline
+       in it, so it needs to visibly lift off the page the way the header's
+       own sticky bar and dropdown panel already do. Same soft value as the
+       sticky header bar, for the same reason. */
+    box-shadow: 0 1px 16px rgb(27 25 23 / 0.08);
+  }
+
+  .consent-banner__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-width: 0;
+  }
+
+  .consent-banner__title {
+    font-family: var(--font-display), sans-serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--bc-ink);
+  }
+
+  .consent-banner__text {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--bc-muted);
+  }
+  .consent-banner__text a {
+    color: var(--bc-accent);
+    text-decoration: underline;
+    text-decoration-color: var(--bc-accent-solid);
+    text-underline-offset: 2px;
+  }
+
+  .consent-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+  }
+  /* The card is narrow by design, so both buttons drop their side padding
+     down a step rather than wrapping their labels — matches .bc-btn-wrap's
+     reasoning on the FAQ CTAs, applied here to width instead of a grid. */
+  .consent-banner__actions :global(.bc-btn) {
+    padding-inline: var(--space-md);
+  }
+</style>

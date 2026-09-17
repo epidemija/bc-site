@@ -1,0 +1,19 @@
+---
+/**
+ * A legal field that still needs a value from the client.
+ *
+ * `node verify.mjs` refuses to pass while a `data-todo-legal` element is
+ * still in the built HTML — a missing Impressum field is not a cosmetic
+ * flaw in Germany, so the build is the safety net rather than somebody's
+ * memory. That check only looks for the attribute, not for any particular
+ * wording, so the public-facing text stays short and calm; `field` is kept
+ * as a hover title, for Bojan checking the live page to see at a glance
+ * which item is still open — not shown to every visitor as red text.
+ */
+interface Props {
+  field: string;
+}
+const { field } = Astro.props;
+---
+
+<span class="bc-todo" data-todo-legal title={field}>Wird in Kürze ergänzt</span>

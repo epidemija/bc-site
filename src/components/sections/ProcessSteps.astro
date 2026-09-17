@@ -1,0 +1,139 @@
+---
+/**
+ * The Ablauf: how an assignment runs, from first contact to handover.
+ *
+ * An ordered list, because the order is the information — CSS makes it a row
+ * with arrows, but a screen reader and a crawler both get "1, 2, 3, 4, 5".
+ * The arrows are decorative and hidden.
+ *
+ * The steps also feed HowTo structured data on the page that renders this, so
+ * the sequence a visitor reads is the sequence Google is given.
+ */
+import Icon from "../ui/Icon.astro";
+
+export interface ProcessStep {
+  title: string;
+  text: string;
+  icon: "phone" | "document" | "building" | "analysis" | "report" | "draft" | "helmet";
+}
+
+interface Props {
+  steps: ProcessStep[];
+  eyebrow?: string;
+  heading?: string;
+  headingId?: string;
+}
+
+const {
+  steps,
+  eyebrow = "Schritt für Schritt zu Ihrem Ziel",
+  heading = "Ablauf",
+  headingId = "ablauf-titel",
+} = Astro.props;
+---
+
+<section class="process" aria-labelledby={headingId}>
+  <div class="mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+    {eyebrow && <p class="bc-eyebrow">{eyebrow}</p>}
+    <h2
+      id={headingId}
+      class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+      data-reveal
+    >
+      {heading}
+    </h2>
+
+    <ol class="mt-12 flex list-none flex-col gap-10 p-0 lg:mt-16 lg:flex-row lg:items-start lg:gap-4">
+      {
+        steps.map((step, i) => (
+          <>
+            <li
+              class="reveal-on-scroll flex flex-1 flex-col items-center text-center"
+              data-reveal
+              style={`transition-delay:${i * 110}ms`}
+            >
+              <div class="process__tile relative flex h-[110px] w-[110px] items-center justify-center rounded-md">
+                <span class="absolute left-2.5 top-2 text-[11px] font-medium text-accent/70" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <Icon name={step.icon} class="h-10 w-10 text-accent" />
+              </div>
+              <h3 class="font-display mt-5 max-w-[220px] text-[17px] text-ink">
+                {step.title}
+              </h3>
+              <p class="mt-3 max-w-[240px] text-[14px] leading-relaxed text-muted">{step.text}</p>
+            </li>
+
+            {i < steps.length - 1 && (
+              <li
+                class="hidden shrink-0 items-center self-start pt-[45px] text-accent lg:flex"
+                aria-hidden="true"
+              >
+                <Icon name="arrow-right" class="step-arrow h-5 w-5" />
+              </li>
+            )}
+          </>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  /*
+   * The warm ground the reference design uses, built from the accent colour so
+   * it follows the theme instead of being a fixed cream that would glow in the
+   * dark theme. No border: the tint itself fades to the page colour at the top
+   * and bottom over a fixed 96px, so the section reads as a soft wash rather
+   * than a bordered panel — softer, not a hard-edged "law firm brochure" cut.
+   */
+  .process {
+    background-image: linear-gradient(
+      to bottom,
+      var(--bc-page) 0,
+      color-mix(in srgb, var(--bc-accent-deco) 9%, var(--bc-page)) 96px,
+      color-mix(in srgb, var(--bc-accent-deco) 9%, var(--bc-page)) calc(100% - 96px),
+      var(--bc-page) 100%
+    );
+  }
+  :global(.dark) .process {
+    background-image: linear-gradient(
+      to bottom,
+      var(--bc-page) 0,
+      color-mix(in srgb, var(--bc-accent-deco) 7%, var(--bc-page)) 96px,
+      color-mix(in srgb, var(--bc-accent-deco) 7%, var(--bc-page)) calc(100% - 96px),
+      var(--bc-page) 100%
+    );
+  }
+
+  /* Soft two-tone gradient fill, no border — a glow behind the icon instead
+     of a boxed frame around it. */
+  .process__tile {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--bc-accent-deco) 22%, var(--bc-surface)),
+      color-mix(in srgb, var(--bc-accent-deco) 8%, var(--bc-surface))
+    );
+  }
+
+  /* A slow, gentle pulse — draws the eye along the sequence without being
+     distracting. Off under prefers-reduced-motion, same as every other
+     animation on the site. */
+  .step-arrow {
+    animation: step-arrow-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes step-arrow-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .step-arrow {
+      animation: none;
+    }
+  }
+</style>

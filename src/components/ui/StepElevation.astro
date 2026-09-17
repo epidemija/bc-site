@@ -1,0 +1,92 @@
+---
+/**
+ * Decorative "stepped elevation" pattern for section transitions: six thin,
+ * layered right-angle terrace lines, a dimensioned bay with its figure and a
+ * levelling mark reading off the top step — the
+ * stepped-massing / staircase / tiered-seating family of horizontal
+ * subjects, drawn the way an elevation drawing is drawn (hard corners,
+ * not curves). One of the three drawing patterns used on the band sections
+ * (with SurveyContour and FloorPlanLines) — same footprint, same edge fade,
+ * so a section can swap one for another without any other change.
+ *
+ * Positioned as an absolute background layer by the caller's own `relative`
+ * wrapper; the band's content carries z-10 and is never drawn over. Shared
+ * styling (mask, dimension figures) lives in global.css § 8e — the figures
+ * are HTML because the SVG is stretched to the band width and would squash
+ * text out of shape.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<div
+  class={`bc-pattern pointer-events-none absolute inset-x-0 top-0 h-40 w-full lg:h-48 ${className}`}
+  aria-hidden="true"
+>
+  <svg class="bc-pattern__svg" viewBox="0 0 1200 210" preserveAspectRatio="none" focusable="false">
+  <path
+    d="M -150.0 44.0 L -57.0 44.0 L 0.0 30.0 L 93.0 30.0 L 150.0 44.0 L 243.0 44.0 L 300.0 30.0 L 393.0 30.0 L 450.0 44.0 L 543.0 44.0 L 600.0 30.0 L 693.0 30.0 L 750.0 44.0 L 843.0 44.0 L 900.0 30.0 L 993.0 30.0 L 1050.0 44.0 L 1143.0 44.0 L 1200.0 30.0 L 1293.0 30.0 L 1350.0 44.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.55"
+    stroke-width="1"
+    fill="none"
+  />
+  <path
+    d="M -190.0 76.0 L -72.2 76.0 L 0.0 58.0 L 117.8 58.0 L 190.0 76.0 L 307.8 76.0 L 380.0 58.0 L 497.8 58.0 L 570.0 76.0 L 687.8 76.0 L 760.0 58.0 L 877.8 58.0 L 950.0 76.0 L 1067.8 76.0 L 1140.0 58.0 L 1257.8 58.0 L 1330.0 76.0 L 1447.8 76.0 L 1520.0 58.0 L 1637.8 58.0 L 1710.0 76.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.45"
+    stroke-width="1"
+    fill="none"
+  />
+  <path
+    d="M -230.0 108.0 L -87.4 108.0 L 0.0 86.0 L 142.6 86.0 L 230.0 108.0 L 372.6 108.0 L 460.0 86.0 L 602.6 86.0 L 690.0 108.0 L 832.6 108.0 L 920.0 86.0 L 1062.6 86.0 L 1150.0 108.0 L 1292.6 108.0 L 1380.0 86.0 L 1522.6 86.0 L 1610.0 108.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.38"
+    stroke-width="1"
+    fill="none"
+  />
+  <path
+    d="M -170.0 138.0 L -64.6 138.0 L 0.0 118.0 L 105.4 118.0 L 170.0 138.0 L 275.4 138.0 L 340.0 118.0 L 445.4 118.0 L 510.0 138.0 L 615.4 138.0 L 680.0 118.0 L 785.4 118.0 L 850.0 138.0 L 955.4 138.0 L 1020.0 118.0 L 1125.4 118.0 L 1190.0 138.0 L 1295.4 138.0 L 1360.0 118.0 L 1465.4 118.0 L 1530.0 138.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.3"
+    stroke-width="1"
+    fill="none"
+  />
+  <path
+    d="M -210.0 162.0 L -79.8 162.0 L -0.0 146.0 L 130.2 146.0 L 210.0 162.0 L 340.2 162.0 L 420.0 146.0 L 550.2 146.0 L 630.0 162.0 L 760.2 162.0 L 840.0 146.0 L 970.2 146.0 L 1050.0 162.0 L 1180.2 162.0 L 1260.0 146.0 L 1390.2 146.0 L 1470.0 162.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.22"
+    stroke-width="1"
+    fill="none"
+  />
+  <path
+    d="M -140.0 182.0 L -53.2 182.0 L 0.0 170.0 L 86.8 170.0 L 140.0 182.0 L 226.8 182.0 L 280.0 170.0 L 366.8 170.0 L 420.0 182.0 L 506.8 182.0 L 560.0 170.0 L 646.8 170.0 L 700.0 182.0 L 786.8 182.0 L 840.0 170.0 L 926.8 170.0 L 980.0 182.0 L 1066.8 182.0 L 1120.0 170.0 L 1206.8 170.0 L 1260.0 182.0 L 1346.8 182.0 L 1400.0 170.0 L 1486.8 170.0 L 1540.0 182.0"
+    stroke="var(--bc-border-strong)"
+    stroke-opacity="0.14"
+    stroke-width="1"
+    fill="none"
+  />
+
+  {/* One dimensioned bay and a levelling mark reading off the top step —
+      the two things an elevation drawing actually carries. Both sit in the
+      strip above the profile, which is the one part of a band that is always
+      clear of the heading; their figures are the HTML spans below. */}
+  <g stroke="var(--bc-border-strong)" stroke-width="1" fill="none" stroke-opacity="0.3">
+    <path d="M 300 12 V 34 M 600 12 V 34"></path>
+    <path d="M 300 22 H 412 M 488 22 H 600"></path>
+    <path d="M 308 18 L 300 22 L 308 26 M 592 18 L 600 22 L 592 26"></path>
+  </g>
+  <g stroke="var(--bc-border-strong)" stroke-width="1" fill="none" stroke-opacity="0.3">
+    <path d="M 860 22 H 990"></path>
+    <path d="M 925 30 L 932 22 L 918 22 Z"></path>
+  </g>
+  </svg>
+
+  {/* x/1200 and y/210 as percentages — the same proportions the stretched SVG
+      uses, so the figures stay on their dimension line at every width. */}
+  <span class="bc-pattern__dim" style="left: 37.5%; top: 10.5%">3,60 m</span>
+  <span class="bc-pattern__dim" style="left: 79.2%; top: 10.5%">+ 3,20</span>
+</div>
+

@@ -1,0 +1,240 @@
+---
+/**
+ * Animated floor plan.
+ *
+ * Illustrates what the office actually does on site: measure a building and
+ * turn it into a scaled digital plan. The walls draw themselves, dimension
+ * lines appear, and a laser line sweeps the plan the way a measuring device
+ * does in a real Aufmaß.
+ *
+ * Everything is inline SVG plus CSS keyframes — no library, no JavaScript, and
+ * it stops completely under `prefers-reduced-motion`. The plan is decorative,
+ * so it is hidden from assistive technology and the same information is given
+ * as text beside it.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+/** Rooms, drawn to a consistent internal grid (1 unit = 10 cm). */
+const rooms = [
+  { x: 24, y: 24, w: 176, h: 132, name: "Wohnen", area: "28,4 m²" },
+  { x: 200, y: 24, w: 132, h: 132, name: "Küche", area: "16,2 m²" },
+  { x: 332, y: 24, w: 124, h: 132, name: "Schlafen", area: "15,8 m²" },
+  { x: 24, y: 156, w: 108, h: 108, name: "Flur", area: "9,1 m²" },
+  { x: 132, y: 156, w: 112, h: 108, name: "Bad", area: "8,4 m²" },
+  { x: 244, y: 156, w: 212, h: 108, name: "Arbeiten", area: "18,6 m²" },
+];
+---
+
+<div class={`fp relative ${className}`} aria-hidden="true">
+  <svg viewBox="0 0 480 300" class="fp-svg w-full" role="presentation">
+    <!-- Faint construction grid, like squared drafting paper -->
+    <defs>
+      <pattern id="fp-grid" width="12" height="12" patternUnits="userSpaceOnUse">
+        <path d="M12 0H0V12" fill="none" stroke="currentColor" stroke-width="0.4" opacity="0.13" />
+      </pattern>
+      <linearGradient id="fp-laser" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--bc-accent-deco)" stop-opacity="0" />
+        <stop offset="45%" stop-color="var(--bc-accent-deco)" stop-opacity="0.55" />
+        <stop offset="50%" stop-color="var(--bc-accent-deco)" stop-opacity="1" />
+        <stop offset="55%" stop-color="var(--bc-accent-deco)" stop-opacity="0.55" />
+        <stop offset="100%" stop-color="var(--bc-accent-deco)" stop-opacity="0" />
+      </linearGradient>
+      <clipPath id="fp-clip">
+        <rect x="24" y="24" width="432" height="240" rx="2" />
+      </clipPath>
+    </defs>
+
+    <rect x="24" y="24" width="432" height="240" fill="url(#fp-grid)" />
+
+    <!-- Rooms: outline draws itself, label fades in afterwards -->
+    {
+      rooms.map((r, i) => (
+        <g class="fp-room" style={`--i:${i}`}>
+          <rect
+            x={r.x}
+            y={r.y}
+            width={r.w}
+            height={r.h}
+            class="fp-wall"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <text x={r.x + r.w / 2} y={r.y + r.h / 2 - 4} class="fp-label" text-anchor="middle">
+            {r.name}
+          </text>
+          <text x={r.x + r.w / 2} y={r.y + r.h / 2 + 12} class="fp-area" text-anchor="middle">
+            {r.area}
+          </text>
+        </g>
+      ))
+    }
+
+    <!-- Openings: white gaps punched into the walls, then door swings -->
+    <g class="fp-openings">
+      <rect x="76" y="150" width="34" height="12" class="fp-gap" />
+      <rect x="194" y="60" width="12" height="34" class="fp-gap" />
+      <rect x="326" y="60" width="12" height="34" class="fp-gap" />
+      <rect x="176" y="150" width="34" height="12" class="fp-gap" />
+      <rect x="290" y="150" width="34" height="12" class="fp-gap" />
+      <path d="M110 156a34 34 0 0 0-34-34" class="fp-swing" fill="none" stroke-width="1.2" />
+      <path d="M210 162a34 34 0 0 1 34 34" class="fp-swing" fill="none" stroke-width="1.2" />
+    </g>
+
+    <!-- Windows on the outer wall -->
+    <g class="fp-windows">
+      <line x1="70" y1="24" x2="130" y2="24" stroke-width="4" />
+      <line x1="240" y1="24" x2="296" y2="24" stroke-width="4" />
+      <line x1="380" y1="24" x2="430" y2="24" stroke-width="4" />
+      <line x1="456" y1="80" x2="456" y2="126" stroke-width="4" />
+    </g>
+
+    <!-- Dimension line, the way it appears on a real measured drawing -->
+    <g class="fp-dim">
+      <line x1="24" y1="282" x2="456" y2="282" stroke-width="1" />
+      <line x1="24" y1="276" x2="24" y2="288" stroke-width="1" />
+      <line x1="456" y1="276" x2="456" y2="288" stroke-width="1" />
+      <text x="240" y="277" text-anchor="middle" class="fp-dim-text">14,40 m</text>
+    </g>
+
+    <!-- Sweeping laser line -->
+    <g clip-path="url(#fp-clip)">
+      <rect class="fp-scan" x="24" y="10" width="432" height="34" fill="url(#fp-laser)" />
+    </g>
+  </svg>
+</div>
+
+<style>
+  .fp {
+    color: var(--bc-ink);
+  }
+
+  .fp-svg {
+    overflow: visible;
+  }
+
+  /* Walls draw themselves along their own outline. */
+  .fp-wall {
+    stroke-dasharray: 700;
+    stroke-dashoffset: 700;
+    animation: fp-draw 1.4s ease-out forwards;
+    animation-delay: calc(var(--i) * 0.16s);
+  }
+
+  .fp-label,
+  .fp-area {
+    opacity: 0;
+    animation: fp-fade 0.6s ease-out forwards;
+    animation-delay: calc(0.9s + var(--i) * 0.16s);
+    fill: currentColor;
+    font-family: "Inter", sans-serif;
+  }
+  .fp-label {
+    font-size: 11px;
+    font-weight: 600;
+    
+  }
+  .fp-area {
+    font-size: 9px;
+    opacity: 0;
+    fill: var(--bc-accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Openings are painted in the page background so they read as gaps. */
+  .fp-gap {
+    fill: var(--bc-page);
+    opacity: 0;
+    animation: fp-fade 0.4s ease-out forwards;
+    animation-delay: 1.5s;
+  }
+  .fp-swing {
+    stroke: currentColor;
+    opacity: 0;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation:
+      fp-fade 0.3s ease-out forwards,
+      fp-draw 0.7s ease-out forwards;
+    animation-delay: 1.7s;
+  }
+
+  .fp-windows line {
+    stroke: var(--bc-accent);
+    opacity: 0;
+    animation: fp-fade 0.5s ease-out forwards;
+    animation-delay: 1.9s;
+  }
+
+  .fp-dim line {
+    stroke: var(--bc-accent);
+    opacity: 0;
+    animation: fp-fade 0.5s ease-out forwards;
+    animation-delay: 2.1s;
+  }
+  .fp-dim-text {
+    fill: var(--bc-accent);
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    animation: fp-fade 0.5s ease-out forwards;
+    animation-delay: 2.2s;
+  }
+
+  /* The measuring sweep: starts after the plan exists, then repeats slowly. */
+  .fp-scan {
+    opacity: 0;
+    animation: fp-sweep 4.5s ease-in-out 2.4s infinite;
+  }
+
+  @keyframes fp-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes fp-fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fp-sweep {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(240px);
+      opacity: 0;
+    }
+  }
+
+  /* The drawing is decoration; without motion it simply shows the finished
+     plan, which is the informative state anyway. */
+  @media (prefers-reduced-motion: reduce) {
+    .fp-wall,
+    .fp-label,
+    .fp-area,
+    .fp-gap,
+    .fp-swing,
+    .fp-windows line,
+    .fp-dim line,
+    .fp-dim-text {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    .fp-scan {
+      display: none;
+    }
+  }
+</style>

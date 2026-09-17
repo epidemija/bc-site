@@ -1,0 +1,216 @@
+---
+/**
+ * Restnutzungsdauergutachten — service page, second level, third Gutachten
+ * subpage alongside Immobilienbewertung and Bauschadensbewertung.
+ *
+ * Structure follows the established Gutachten pattern: photographic hero,
+ * text-and-photo intro, one sr-only-headed FactGrid with three cards, a
+ * page-local Ablauf (the process here is its own, not the shared
+ * ABLAUF_GUTACHTEN), FAQ and ClosingCta.
+ *
+ * TEMPORARY: no dedicated photo exists yet for this page — reusing the
+ * Immobilienbewertung hero image until a dedicated shot does.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import SurveyContour from "../../../components/ui/SurveyContour.astro";
+import ProcessSteps, { type ProcessStep } from "../../../components/sections/ProcessSteps.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import heroImage from "../../../assets/images/hero-bc-immowert-immobilienbewertung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.restnutzungsdauergutachten;
+
+/* ------------------------------------------------------------- content */
+
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann kann es interessant sein?",
+    items: [
+      "bei vermieteten Bestandsimmobilien",
+      "bei älteren Mehrfamilienhäusern",
+      "bei vermieteten Eigentumswohnungen",
+      "bei Wohn- und Geschäftshäusern",
+      "bei Gewerbeimmobilien",
+      "wenn die tatsächliche Nutzungsdauer möglicherweise deutlich unter der typisierten Nutzungsdauer liegt",
+    ],
+  },
+  {
+    icon: "target",
+    title: "Was ist das Ziel?",
+    items: [
+      "tatsächliche Restnutzungsdauer sachverständig untersuchen",
+      "objektbezogene Gegebenheiten berücksichtigen",
+      "Ergebnis nachvollziehbar dokumentieren",
+      "Grundlage für die Prüfung einer höheren AfA schaffen",
+      "Nachweis für die steuerliche Verwendung bereitstellen",
+    ],
+  },
+  {
+    icon: "document",
+    title: "Was Sie erhalten",
+    items: [
+      "objektspezifische Begutachtung",
+      "nachvollziehbare Ermittlung der Restnutzungsdauer",
+      "Berücksichtigung relevanter Modernisierungen und des Gebäudezustands",
+      "schriftliches Restnutzungsdauergutachten",
+      "persönliche Erläuterung der Ergebnisse",
+    ],
+  },
+];
+
+const steps: ProcessStep[] = [
+  {
+    icon: "phone",
+    title: "Anfrage",
+    text: "Sie senden uns die wichtigsten Informationen zur Immobilie sowie die vorhandenen Unterlagen.",
+  },
+  {
+    icon: "document",
+    title: "Vorprüfung",
+    text: "Wir prüfen die Ausgangssituation und klären, ob ein Restnutzungsdauergutachten für das Objekt grundsätzlich sinnvoll erscheint.",
+  },
+  {
+    icon: "building",
+    title: "Objektaufnahme & Unterlagenprüfung",
+    text: "Wir betrachten die individuellen Gegebenheiten der Immobilie und beziehen vorhandene Bau-, Modernisierungs- und Objektunterlagen in die Untersuchung ein.",
+  },
+  {
+    icon: "analysis",
+    title: "Ermittlung der Restnutzungsdauer",
+    text: "Die relevanten technischen, wirtschaftlichen und objektbezogenen Einflussfaktoren werden ausgewertet und die tatsächliche Restnutzungsdauer sachverständig hergeleitet.",
+  },
+  {
+    icon: "report",
+    title: "Gutachten & Besprechung",
+    text: "Sie erhalten das fertige Restnutzungsdauergutachten. Anschließend erläutern wir Ihnen das Ergebnis und beantworten offene Fragen.",
+  },
+];
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("restnutzungsdauergutachten")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Restnutzungsdauergutachten",
+      description:
+        "Sachverständige Ermittlung der tatsächlichen Restnutzungsdauer vermieteter Immobilien " +
+        "als Nachweis für eine höhere AfA gegenüber dem Finanzamt.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf eines Restnutzungsdauergutachtens",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="restnutzungsdauergutachten" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Restnutzungsdauergutachten"
+    subtitle={["Sachverständige Beurteilung", "Zur Vorlage beim Finanzamt"]}
+    image={heroImage}
+    imageAlt="Sachverständiger bei der Beurteilung der Restnutzungsdauer einer vermieteten Immobilie"
+  />
+
+  <Breadcrumbs page="restnutzungsdauergutachten" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/.
+      TEMPORARY: reusing the Immobilienbewertung hero photo here until a
+      dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Tatsächliche Nutzungsdauer nachweisen<br class="lg:hidden" /><span class="hidden lg:inline"><span class="bc-divider" aria-hidden="true" /></span>AfA-Potenzial prüfen
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Bei vermieteten Immobilien kann eine kürzere tatsächliche Nutzungsdauer zu einer höheren
+          jährlichen Abschreibung (AfA) führen. Mit einem Restnutzungsdauergutachten wird die
+          tatsächliche Nutzungsdauer der Immobilie sachverständig untersucht und nachvollziehbar
+          dokumentiert.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Kann eine kürzere tatsächliche Nutzungsdauer nachvollziehbar nachgewiesen werden, ist
+          eine Abschreibung entsprechend dieser kürzeren Nutzungsdauer möglich. Dadurch erhöht
+          sich die jährliche AfA dieser Immobilie.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:200ms"
+        >
+          Ein Restnutzungsdauergutachten untersucht die individuellen Gegebenheiten des Gebäudes
+          und dient als Nachweis gegenüber dem Finanzamt.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Sachverständiger bei der Beurteilung der Restnutzungsdauer einer vermieteten Immobilie"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Überblick ---------------- */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <SurveyContour />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Wann ist ein Restnutzungsdauergutachten sinnvoll?
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="restnutzungsdauergutachten" eyebrow="" />
+
+  <ClosingCta
+    heading="Sie möchten prüfen lassen, ob sich ein Restnutzungsdauergutachten lohnt?"
+    text="Schildern Sie uns kurz Ihre Immobilie. Wir prüfen die Ausgangssituation und sagen Ihnen, ob ein Restnutzungsdauergutachten sinnvoll ist."
+    buttonHref={routes.kontakt}
+  />
+</BaseLayout>

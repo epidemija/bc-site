@@ -1,0 +1,62 @@
+---
+/**
+ * The only way a call-to-action should be built on this site.
+ *
+ * Before this component there were seven different CTA treatments in the
+ * codebase — px-10/py-5/text-xl in one section, px-7/py-4/text-[15px] on ten
+ * pages, px-5/py-4/text-base in the header, plus three different icons
+ * (arrow-dr, arrow-right, chevron-right) and one button with no icon at all.
+ * Every one of those is now a call to this file.
+ *
+ * Geometry, type, transition and focus ring live in .bc-btn in global.css;
+ * only the fill changes between variants. The arrow is not optional and never
+ * moves to the left — a consistent directional cue is most of what makes a set
+ * of buttons read as one system.
+ */
+import Icon from "./Icon.astro";
+
+interface Props {
+  /** Renders <a> when set, <button> otherwise. */
+  href?: string;
+  variant?: "primary" | "secondary" | "ghost";
+  type?: "button" | "submit";
+  /** Full width — form submits and the mobile menu, not a per-button whim. */
+  block?: boolean;
+  /** Inverts the secondary variant for use on the dark footer band. */
+  onDark?: boolean;
+  /** Suppresses the arrow. Only for controls that are not directional, such
+   *  as a phone link; the default is always to show it. */
+  icon?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  href,
+  variant = "primary",
+  type = "button",
+  block = false,
+  onDark = false,
+  icon = true,
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const classes = [
+  "bc-btn",
+  `bc-btn-${variant}`,
+  block && "bc-btn-block",
+  onDark && "bc-btn-on-dark",
+  className,
+]
+  .filter(Boolean)
+  .join(" ");
+
+const Tag = href ? "a" : "button";
+const tagProps = href ? { href } : { type };
+---
+
+<Tag class={classes} {...tagProps} {...rest}>
+  <span><slot /></span>
+  {icon && <Icon name="arrow-dr" />}
+</Tag>

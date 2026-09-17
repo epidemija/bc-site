@@ -1,0 +1,178 @@
+---
+/**
+ * Flächenberechnung — service page, second level. Last of the four.
+ *
+ * Two cards, filling the grid's two columns. Its own process array: the third
+ * step here is checking the existing plans, not measuring, because a
+ * calculation can be built on documents that still match the building.
+ *
+ * The copy links to Aufmaß and Digitale Grundrisse, which is where the client's
+ * own "Kombination mit aktuellem Aufmaß und digitalen Grundrissen" points.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import StepElevation from "../../../components/ui/StepElevation.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_FLAECHEN } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-flaechenberechnung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.flaechenberechnung;
+
+/* ------------------------------------------------------------- content */
+
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann werden Flächenberechnungen benötigt?",
+    items: [
+      "beim Verkauf oder der Vermietung einer Immobilie",
+      "für Finanzierungen und Beleihungsprüfungen",
+      "bei fehlenden oder unklaren Flächenangaben",
+      "zur Korrektur veralteter Unterlagen",
+      "für Bewertungen und Gutachten",
+      "bei Umbauten oder Nutzungsänderungen",
+    ],
+  },
+  {
+    icon: "document",
+    title: "Was Sie erhalten",
+    items: [
+      "Wohnflächenberechnung nach WoFlV oder Flächenberechnung nach DIN 277 – je nach Verwendungszweck",
+      "Übersichtliche Aufstellung der einzelnen Räume und Flächen",
+      "Nachvollziehbare Berechnungsgrundlage",
+      "Berücksichtigung von Dachschrägen, Balkonen und Terrassen nach den jeweiligen Vorgaben",
+      "Auf Wunsch in Kombination mit Vor-Ort-Aufmaß und digitalen Grundrissen",
+      "Digitale Bereitstellung der fertigen Unterlagen",
+    ],
+  },
+];
+
+const steps = ABLAUF_FLAECHEN;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("flaechenberechnung")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Flächenberechnung",
+      description:
+        "Ermittlung von Wohn- und Nutzflächen nach Wohnflächenverordnung (WoFlV) und DIN 277 " +
+        "als nachvollziehbare Grundlage für Bewertung, Vermarktung und Finanzierung.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf einer Flächenberechnung",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="flaechenberechnung" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Flächenberechnung"
+    subtitle="Nach WoFlV und DIN 277"
+    image={heroImage}
+    imageAlt="Berechnung von Wohn- und Nutzflächen anhand eines Grundrisses"
+  />
+
+  <Breadcrumbs page="flaechenberechnung" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Wie viel Fläche ist es wirklich?
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Eine präzise Wohn- und Nutzflächenberechnung schafft Klarheit über die tatsächlichen
+          Flächenverhältnisse Ihrer Immobilie. Die Ermittlung erfolgt nachvollziehbar und nach
+          geltenden Standards – als verlässliche Grundlage für Bewertung, Vermarktung, Finanzierung und Planung.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Grundlage sind entweder geprüfte Bestandsunterlagen oder ein <a
+            href={routes.aufmass}
+            class="font-medium text-ink underline decoration-[color:var(--bc-accent)] decoration-2 underline-offset-4 transition-colors hover:text-accent"
+            >Aufmaß vor Ort</a
+          >; auf Wunsch entstehen daraus im selben Zug auch <a
+            href={routes.digitaleGrundrisse}
+            class="font-medium text-ink underline decoration-[color:var(--bc-accent)] decoration-2 underline-offset-4 transition-colors hover:text-accent"
+            >digitale Grundrisse</a
+          >. Welche Flächen wie angerechnet wurden, ist in der Berechnung Schritt für Schritt
+          dargestellt und damit für Käufer, Mieter und Banken nachprüfbar.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Berechnung von Wohn- und Nutzflächen anhand eines Grundrisses"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- The lists, compacted ----------------
+      No visible eyebrow/heading — the cards need no section title above
+      them; kept as a screen-reader-only heading so the section still has a
+      real accessible name. No border: the wash fades to the page colour
+      over a fixed 96px at top and bottom, same treatment as ProcessSteps'
+      band below it — a soft transition instead of a hard-edged panel. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <StepElevation />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass und Vorgehen auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="flaechenberechnung" eyebrow="" />
+
+  <ClosingCta heading="Zweifel an der angegebenen Wohnfläche?" text="Schicken Sie uns die vorhandenen Unterlagen zu. Wir prüfen, ob sie noch zum Gebäude passen, und sagen Ihnen, ob die Berechnung daraus erfolgen kann oder ein Aufmaß vor Ort nötig ist." buttonHref={routes.kontakt} />
+</BaseLayout>

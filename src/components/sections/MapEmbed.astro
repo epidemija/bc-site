@@ -1,0 +1,169 @@
+---
+/**
+ * Anfahrt — OpenStreetMap, gated behind the same external-content consent as
+ * Google Analytics (see ConsentBanner.astro / site.js), not behind its own
+ * separate click.
+ *
+ * Two things are deliberate here.
+ *
+ * 1. Nothing third-party loads on page open. The iframe is built in
+ *    JavaScript, never present in the delivered HTML — `node verify.mjs`
+ *    asserts that no openstreetmap iframe sits in dist/kontakt/index.html.
+ *    It appears the moment `bc:external-consent-granted` fires: immediately
+ *    on load for a returning visitor who already said yes, or the instant a
+ *    new visitor accepts the banner — no second, map-specific click needed.
+ *    The `data-external-embed` marker below is what makes the banner show
+ *    itself on this page in the first place (see the "hasEmbedHere" check in
+ *    site.js).
+ *
+ * 2. No invented coordinates. `ORGANISATION.geo` is null until somebody fills
+ *    in the real position, and until then this renders the address with a link
+ *    that lets OpenStreetMap geocode it rather than dropping a marker on a
+ *    guessed spot. Filling `geo` in switches the embed on.
+ *
+ * The button stays as a direct path for a visitor who lands here before the
+ * banner has appeared, or who declined earlier and changes their mind: it
+ * grants consent itself (same effect as the banner's "Akzeptieren") and the
+ * map loads immediately after, exactly as it would from the banner.
+ *
+ * Without JavaScript the button never appears and the plain link remains, so
+ * the address is reachable either way.
+ */
+import { ORGANISATION as site } from "../../config/site";
+
+const { address, geo } = site;
+const query = `${address.street}, ${address.postalCode} ${address.city}`;
+
+/** Roughly 500 m around the office — close enough to recognise the street. */
+const span = 0.006;
+const embedSrc = geo
+  ? "https://www.openstreetmap.org/export/embed.html?bbox=" +
+    [geo.lon - span, geo.lat - span / 2, geo.lon + span, geo.lat + span / 2].join(",") +
+    `&layer=mapnik&marker=${geo.lat},${geo.lon}`
+  : null;
+
+/** With coordinates, link straight at them; without, let OSM resolve the address. */
+const linkHref = geo
+  ? `https://www.openstreetmap.org/?mlat=${geo.lat}&mlon=${geo.lon}#map=17/${geo.lat}/${geo.lon}`
+  : `https://www.openstreetmap.org/search?query=${encodeURIComponent(query)}`;
+---
+
+<section
+  class="mx-auto w-full max-w-[1400px] px-5 pb-16 lg:px-8 lg:pb-24"
+  aria-labelledby="anfahrt-titel"
+>
+  <div class="mx-auto max-w-2xl lg:max-w-5xl">
+    <h2 id="anfahrt-titel" class="font-display text-xl text-ink">Anfahrt</h2>
+    <p class="mt-2 text-sm leading-relaxed text-muted">
+      {query}
+      <span class="bc-divider" aria-hidden="true" />
+      {site.openingHours.label}
+      <span class="bc-divider" aria-hidden="true" />
+      Termine nach Vereinbarung
+    </p>
+
+    <div
+      class="mt-5 overflow-hidden rounded-sm border border-[color:var(--bc-border)] bg-[color:var(--bc-surface)]"
+      data-map
+      data-external-embed
+      data-src={embedSrc}
+    >
+      <div
+        class="flex min-h-[300px] flex-col items-center justify-center gap-4 px-6 py-14 text-center"
+        data-map-placeholder
+      >
+        <svg
+          class="h-10 w-10 text-accent"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+
+        <p class="max-w-md text-sm leading-relaxed text-muted">
+          {
+            embedSrc
+              ? "Die Karte lädt automatisch, sobald Sie der Einbindung externer Inhalte zustimmen. Dabei wird Ihre IP-Adresse an OpenStreetMap übertragen."
+              : "Die Karte öffnet sich in einem neuen Tab bei OpenStreetMap. Es werden von dieser Seite aus keine Daten an Dritte übertragen."
+          }
+        </p>
+
+        {
+          embedSrc && (
+            <button
+              type="button"
+              class="hidden rounded-sm border border-[color:var(--bc-accent)] px-5 py-3 text-sm font-semibold text-ink transition hover:bg-[color:color-mix(in_srgb,var(--bc-accent)_14%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+              data-map-load
+            >
+              Karte laden
+            </button>
+          )
+        }
+
+        <a
+          class="text-sm font-medium text-accent underline decoration-[color:var(--bc-accent)]/40 decoration-2 underline-offset-4 transition hover:decoration-[color:var(--bc-accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent)]/40"
+          href={linkHref}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          In OpenStreetMap öffnen
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Kept in sync with CONSENT_KEY in src/scripts/site.js by hand — two
+  // separate script contexts (this component's own <script>, loaded per
+  // page, vs. the shared site.js), so the string is duplicated rather than
+  // imported.
+  const CONSENT_KEY = "bc-consent-external";
+
+  const wrapper = document.querySelector<HTMLElement>("[data-map]");
+  const button = wrapper?.querySelector<HTMLButtonElement>("[data-map-load]");
+  const placeholder = wrapper?.querySelector<HTMLElement>("[data-map-placeholder]");
+
+  function loadMap() {
+    const src = wrapper?.dataset.src;
+    if (!wrapper || !src || wrapper.querySelector("iframe")) return;
+
+    const frame = document.createElement("iframe");
+    frame.src = src;
+    frame.title = "Standort BC IMMOWERT auf OpenStreetMap";
+    frame.loading = "lazy";
+    frame.referrerPolicy = "no-referrer";
+    frame.className = "block h-[300px] w-full border-0 sm:h-[420px]";
+
+    placeholder?.remove();
+    wrapper.appendChild(frame);
+  }
+
+  // Fires the instant consent is granted — for a visitor who accepts the
+  // banner right now on this page. For a *returning* visitor whose consent
+  // is already stored, don't rely on site.js's own synchronous re-dispatch
+  // arriving before this listener is registered (Astro bundles this
+  // component's script together with site.js, and cross-file execution
+  // order between them is not something to depend on) — check localStorage
+  // directly instead, which is order-independent.
+  document.addEventListener("bc:external-consent-granted", loadMap);
+  try {
+    if (localStorage.getItem(CONSENT_KEY) === "granted") loadMap();
+  } catch (e) {}
+
+  button?.classList.remove("hidden");
+  button?.addEventListener("click", () => {
+    try {
+      localStorage.setItem(CONSENT_KEY, "granted");
+    } catch (e) {}
+    const banner = document.querySelector<HTMLElement>("[data-consent-banner]");
+    if (banner) banner.hidden = true;
+    document.dispatchEvent(new CustomEvent("bc:external-consent-granted"));
+  });
+</script>

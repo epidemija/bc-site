@@ -1,0 +1,192 @@
+---
+/**
+ * Aufmaß — service page, second level.
+ *
+ * Same skeleton as the other service pages. Three cards here rather than four,
+ * with "Warum wir?" set wide so the grid closes cleanly instead of leaving a
+ * hole in the second row.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import StepElevation from "../../../components/ui/StepElevation.astro";
+import StatementImageBand from "../../../components/sections/StatementImageBand.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_UNTERLAGEN } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-aufmass.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.aufmass;
+
+/* ------------------------------------------------------------- content */
+
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann wird ein Aufmaß benötigt?",
+    items: [
+      "für Finanzierungsvorhaben",
+      "beim Kauf oder Verkauf einer Immobilie",
+      "zur Vermietung",
+      "bei fehlenden oder veralteten Bestandsunterlagen",
+      "für Umbauten oder Modernisierungen",
+      "zur Erstellung von Grundrissen und Flächenberechnungen",
+    ],
+  },
+  {
+    icon: "target",
+    title: "Ziel des Aufmaßes",
+    items: [
+      "maßgenaue Erfassung des tatsächlichen Gebäudebestands",
+      "ein digitales Modell als Grundlage für alle weiteren Unterlagen",
+      "Grundrisse, Ansichten und Schnitte jederzeit ableitbar",
+      "verlässliche Basis für Wohn- und Nutzflächenberechnungen",
+      "Unterlagen, die Architekten, Fachplaner und Behörden weiterverwenden können",
+    ],
+  },
+  {
+    icon: "award",
+    title: "Warum wir?",
+    items: [
+      "Lasergenaues Aufmaß durch moderne Messtechnik",
+      "Effiziente Aufnahme durch den Einsatz innovativer Scanverfahren",
+      "Schnelle und strukturierte Durchführung vor Ort",
+      "Unkomplizierter Ablauf – auch im bewohnten Zustand möglich",
+      "Präzise und nachvollziehbare Ergebnisse als sichere Grundlage",
+    ],
+  },
+];
+
+const steps = ABLAUF_UNTERLAGEN;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("aufmass")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "Aufmaß",
+      description:
+        "Lasergenaue digitale Bestandsaufnahme von Gebäuden vor Ort als Grundlage für " +
+        "Grundrisse, Ansichten, Schnitte sowie Wohn- und Nutzflächenberechnungen.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf eines Aufmaßes",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="aufmass" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Aufmaß"
+    subtitle="Präzise Bestandsaufnahme"
+    image={heroImage}
+    imageAlt="Lasermessgerät projiziert Messlinien auf eine Wand beim Aufmaß einer Wohnung"
+  />
+
+  <Breadcrumbs page="aufmass" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Einmal messen, beliebig oft verwenden
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Ein präzises Aufmaß bildet die Grundlage für verlässliche Immobilienunterlagen und
+          weitere Planungen. Durch den Einsatz moderner Scanverfahren erfolgt die Aufnahme
+          effizient, lasergenau und auch im bewohnten Zustand unkompliziert.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Auf Basis des Aufmaßes und des daraus erzeugten digitalen Modells können jederzeit
+          Grundrisse, Ansichten, Schnitte sowie Wohn- und Nutzflächenberechnungen erstellt und
+          flexibel abgebildet werden. Was heute als Grundriss gebraucht wird, lässt sich später
+          ohne zweiten Termin auch als Flächenberechnung oder Schnitt ausgeben.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Lasermessgerät projiziert Messlinien auf eine Wand beim Aufmaß einer Wohnung"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Statement: outdated plans ---------------- */}
+  <StatementImageBand
+    heading="Wenn der Grundriss nicht mehr zum Gebäude passt"
+    headingId="grundriss-titel"
+    text={[
+      "Gerade bei älteren Immobilien stimmen vorhandene Pläne nicht immer mit dem heutigen Bestand überein. Wände wurden versetzt, Räume zusammengelegt, Anbauten ergänzt oder frühere Umbauten nicht in den Unterlagen nachgetragen. Auch sehr alte, unvollständige oder schlecht lesbare Grundrisse reichen für den heutigen Verwendungszweck nicht immer aus und können beispielsweise bei Finanzierung, Verkauf oder weiterer Planung zu Rückfragen führen.",
+      "Beim Vor-Ort-Aufmaß erfassen wir den tatsächlichen heutigen Zustand der Immobilie. Auf dieser Grundlage können aktuelle Grundrisse sowie Wohn- und Nutzflächenberechnungen erstellt werden.",
+    ]}
+    primaryCta={{ label: "Aufmaß anfragen", href: routes.kontakt }}
+    secondaryCta={{ label: "Digitale Grundrisse ansehen", href: routes.digitaleGrundrisse }}
+  />
+
+  {/* ---------------- The lists, compacted ----------------
+      No visible eyebrow/heading — the cards need no section title above
+      them; kept as a screen-reader-only heading so the section still has a
+      real accessible name. No border: the wash fades to the page colour
+      over a fixed 96px at top and bottom, same treatment as ProcessSteps'
+      band below it — a soft transition instead of a hard-edged panel. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <StepElevation />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass, Ziel und Vorgehen auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="aufmass" eyebrow="" />
+
+  <ClosingCta heading="Keine aktuellen Pläne im Haus?" text="Sagen Sie uns, um welches Objekt es geht und wofür Sie die Unterlagen brauchen. Die Aufnahme vor Ort ist in der Regel an einem Termin erledigt – auch dann, wenn die Immobilie bewohnt ist." buttonHref={routes.kontakt} />
+</BaseLayout>

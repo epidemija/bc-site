@@ -1,0 +1,84 @@
+---
+/**
+ * FAQ accordion — the "centered FAQ accordion" pattern: a stack of questions,
+ * one answer open at a time, no dividers, the open item marked by a tinted
+ * ground rather than a border.
+ *
+ * WHY NOT THE PRELINE RUNTIME: the reference block drives this with Preline's
+ * HSAccordion. Adding it would put roughly 30 KB of JavaScript back into a site
+ * that was deliberately taken from 117 KB to 1.3 KB (see the project notes).
+ * The exclusive-open behaviour is ~20 lines, so it lives in site.js with the
+ * rest of the client logic.
+ *
+ * WHY display:none AND NOT A HEIGHT ANIMATION: a panel collapsed to height 0
+ * with overflow hidden is still in the accessibility tree, so a screen reader
+ * announces every answer on the page whether it is open or not. Removing the
+ * panel from the layout is what actually closes it. The motion is carried by
+ * the chevron instead.
+ *
+ * PROGRESSIVE ENHANCEMENT: the open state is a `data-open` attribute rendered
+ * on the server, so the first answer is already open in the delivered HTML —
+ * no flash of an all-open list before the script runs. Without JavaScript the
+ * `.no-js` rule opens every panel, so the content is fully readable and
+ * crawlable either way. Every answer is in the HTML in all cases.
+ */
+import Icon from "./Icon.astro";
+import type { FaqEntry } from "../../config/faq";
+
+interface Props {
+  entries: FaqEntry[];
+  /**
+   * Unique prefix for the id pairs that tie each button to its panel. Two
+   * accordions on one page must not share it.
+   */
+  idPrefix: string;
+  /**
+   * Heading level for the questions. The questions sit under the section's own
+   * heading, so a page whose section uses <h2> passes 3 here. Keeping this a
+   * prop is what stops the /faq/ page — where categories add a level — from
+   * skipping from <h2> to <h4>.
+   */
+  level?: 3 | 4;
+  /** Index of the item open on load; -1 opens none. */
+  defaultOpen?: number;
+  class?: string;
+}
+
+const { entries, idPrefix, level = 3, defaultOpen = 0, class: className = "" } = Astro.props;
+const Heading = `h${level}` as "h3" | "h4";
+---
+
+<div class:list={["bc-accordion", className]} data-accordion>
+  {
+    entries.map((entry, i) => (
+      <div class="bc-accordion__item" data-accordion-item data-open={i === defaultOpen ? "" : null}>
+        <Heading class="bc-accordion__heading">
+          <button
+            type="button"
+            class="bc-accordion__toggle"
+            id={`${idPrefix}-q-${i}`}
+            aria-expanded={i === defaultOpen ? "true" : "false"}
+            aria-controls={`${idPrefix}-a-${i}`}
+            data-accordion-toggle
+          >
+            <span class="bc-accordion__question">{entry.q}</span>
+            <Icon name="chevron-down" class="bc-accordion__chevron" />
+          </button>
+        </Heading>
+
+        <div
+          class="bc-accordion__panel"
+          id={`${idPrefix}-a-${i}`}
+          role="region"
+          aria-labelledby={`${idPrefix}-q-${i}`}
+        >
+          <div class="bc-accordion__answer">
+            {entry.a.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>

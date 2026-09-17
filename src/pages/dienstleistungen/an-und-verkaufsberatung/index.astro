@@ -1,0 +1,260 @@
+---
+/**
+ * An- und Verkaufsberatung — service page, second level.
+ *
+ * Same skeleton as the other service pages: photographic header, one <h1>, the
+ * four related lists as one FactGrid (§5e), the process, a closing enquiry.
+ *
+ * The process here is ABLAUF_BERATUNG, its own array — this assignment ends
+ * with the client able to decide, not with a report or a finished building.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { faqFor } from "../../../config/faq";
+import FaqSection from "../../../components/sections/FaqSection.astro";
+import Breadcrumbs from "../../../components/layout/Breadcrumbs.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import FactGrid, { type FactCard } from "../../../components/sections/FactGrid.astro";
+import Icon from "../../../components/ui/Icon.astro";
+import ProcessSteps from "../../../components/sections/ProcessSteps.astro";
+import FloorPlanLines from "../../../components/ui/FloorPlanLines.astro";
+import { PAGES } from "../../../config/pages";
+import { subpageSchema, serviceSchemas, howToSchema, faqSchema } from "../../../seo/schema";
+import { routes } from "../../../config/site";
+import { ABLAUF_BERATUNG } from "../../../config/process";
+import heroImage from "../../../assets/images/hero-bc-immowert-an-und-verkaufsberatung.jpg";
+import ClosingCta from "../../../components/sections/ClosingCta.astro";
+
+const page = PAGES.anUndVerkaufsberatung;
+
+/* ------------------------------------------------------------- content */
+
+/** The two situations this service covers — kept apart because a buyer and
+ * a seller are looking for different things from the same underlying
+ * inspection. */
+const beratungsarten = [
+  {
+    icon: "shield" as const,
+    eyebrow: "Ankaufsberatung",
+    title: "Vor dem Kauf genauer hinschauen",
+    items: [
+      "Technischen Zustand einschätzen",
+      "Auffälligkeiten und mögliche Mängel erkennen",
+      "Modernisierungs- und Investitionsbedarf abschätzen",
+      "Vorhandene Objektunterlagen prüfen",
+      "Kaufpreis besser einordnen",
+      "Argumente für eine sachliche Preisverhandlung gewinnen",
+    ],
+    text: "Die Ankaufsberatung hilft Ihnen, eine Immobilie vor der endgültigen Kaufentscheidung besser einzuschätzen. Sie erfahren, welche technischen Punkte auffallen, welche Maßnahmen absehbar sein können und was Sie bei Ihrer Entscheidung berücksichtigen sollten.",
+  },
+  {
+    icon: "trend" as const,
+    eyebrow: "Verkaufsberatung",
+    title: "Gut vorbereitet in den Verkauf",
+    items: [
+      "Vorhandene Objektunterlagen prüfen",
+      "Zustand der Immobilie einordnen",
+      "Fehlende Unterlagen identifizieren",
+      "Verkaufspreis realistisch einschätzen",
+      "Sinnvolle Maßnahmen vor der Vermarktung besprechen",
+      "Immobilie transparent auf den Verkauf vorbereiten",
+    ],
+    text: "Bei der Verkaufsberatung schauen wir gemeinsam, wie Ihre Immobilie für den Verkauf aufgestellt ist. Wir prüfen vorhandene Unterlagen, den Zustand und die Preisvorstellung und besprechen, welche Vorbereitungen vor der Vermarktung sinnvoll sind.",
+  },
+];
+
+const cards: FactCard[] = [
+  {
+    icon: "check",
+    title: "Wann ist eine An- und Verkaufsberatung sinnvoll?",
+    items: [
+      "vor dem Kauf einer Immobilie",
+      "zur Unterstützung bei Preisverhandlungen",
+      "bei Unsicherheiten hinsichtlich Zustand oder Wert",
+      "zur Einschätzung von Risiken und Folgekosten",
+      "vor dem Verkauf zur optimalen Positionierung am Markt",
+    ],
+  },
+  {
+    icon: "trend",
+    title: "Vorteile der An- und Verkaufsberatung",
+    items: [
+      "Objektive und fachliche Einschätzung der Immobilie",
+      "Bessere Verhandlungsposition",
+      "Frühzeitige Erkennung von Risiken",
+      "Fundierte Entscheidungsgrundlage",
+      "Mehr Sicherheit im gesamten Prozess",
+    ],
+  },
+  {
+    icon: "target",
+    title: "Ziel der An- und Verkaufsberatung",
+    items: [
+      "Transparente Bewertung von Chancen und Risiken",
+      "Unterstützung bei fundierten Kauf- oder Verkaufsentscheidungen",
+      "Vermeidung von Fehleinschätzungen",
+      "Schaffung einer sicheren Grundlage für wirtschaftlich sinnvolle Entscheidungen",
+    ],
+  },
+  {
+    icon: "award",
+    title: "Warum wir?",
+    items: [
+      "Kombination aus Erfahrung als Sachverständige und Bauingenieure",
+      "Objektive und fachlich fundierte Einschätzung von Immobilien",
+      "Unterstützung bei Preisverhandlungen und Entscheidungsfindung",
+      "Frühzeitige Erkennung von Risiken und Potenzialen",
+      "Verlässliche Grundlage für sichere Kauf- oder Verkaufsentscheidungen",
+    ],
+  },
+];
+
+const steps = ABLAUF_BERATUNG;
+
+/* -------------------------------------------------------------- schema */
+
+const jsonLd = subpageSchema(page, [
+  faqSchema(faqFor("an-und-verkaufsberatung")?.entries ?? []),
+  ...serviceSchemas([
+    {
+      name: "An- und Verkaufsberatung",
+      description:
+        "Unabhängige technische und wirtschaftliche Einschätzung einer Immobilie vor Kauf oder " +
+        "Verkauf, als Grundlage für Preisverhandlung und Entscheidung.",
+      path: page.path,
+    },
+  ]),
+  howToSchema({
+    page,
+    name: "Ablauf einer An- und Verkaufsberatung",
+    steps: steps.map(({ title, text }) => ({ title, text })),
+  }),
+]);
+---
+
+<BaseLayout page="anUndVerkaufsberatung" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="An- & Verkaufsberatung"
+    subtitle="Immobilien vor dem Kauf oder Verkauf richtig einschätzen"
+    image={heroImage}
+    imageAlt="Beratungsgespräch zum Kauf oder Verkauf einer Immobilie am Besprechungstisch"
+  />
+
+  <Breadcrumbs page="anUndVerkaufsberatung" />
+
+  {/* ---------------- Introduction ----------------
+      Text-and-photo layout, matching /gutachten/immobilienbewertung/: all
+      copy in one column, a photo beside it. TEMPORARY: reusing the page's
+      own hero photo here until a dedicated shot exists for this spot. */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+    aria-labelledby="grundlage-titel"
+  >
+    <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div>
+        <h2
+          id="grundlage-titel"
+          class="reveal-on-scroll font-display text-3xl text-ink sm:text-4xl lg:text-[40px]"
+          data-reveal
+        >
+          Nicht aus dem Bauch heraus, sondern aus den Fakten
+        </h2>
+        <p class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted" data-reveal>
+          Beim Kauf oder Verkauf einer Immobilie gibt es viele Punkte, die sich auf den ersten
+          Blick nur schwer einschätzen lassen. Zustand, anstehende Modernisierungen, mögliche
+          Mängel und der daraus entstehende Investitionsbedarf können die Entscheidung erheblich
+          beeinflussen.
+        </p>
+        <p
+          class="reveal-on-scroll mt-5 text-base leading-relaxed text-muted"
+          data-reveal
+          style="transition-delay:100ms"
+        >
+          Wir schauen uns die Immobilie unabhängig an und ordnen den technischen und
+          wirtschaftlichen Zustand für Sie ein. Dabei zeigen wir Ihnen offen, welche Punkte
+          unauffällig sind, wo weiterer Prüfbedarf besteht und mit welchen Maßnahmen Sie
+          gegebenenfalls rechnen sollten.
+        </p>
+      </div>
+
+      <div
+        class="reveal-on-scroll aspect-[4/3] w-full overflow-hidden rounded-md border border-[color:var(--bc-border)]"
+        data-reveal
+        style="transition-delay:150ms"
+      >
+        <Picture
+          src={heroImage}
+          formats={["avif", "webp"]}
+          widths={[480, 720, 960]}
+          quality={92}
+          sizes="(min-width: 1024px) 640px, 100vw"
+          alt="Beratungsgespräch zum Kauf oder Verkauf einer Immobilie am Besprechungstisch"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* ---------------- Ankaufsberatung / Verkaufsberatung ---------------- */}
+  <section class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8" aria-labelledby="beratungsarten-titel">
+    <h2 id="beratungsarten-titel" class="sr-only">
+      Ankaufsberatung und Verkaufsberatung im Überblick
+    </h2>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      {
+        beratungsarten.map((art, i) => (
+          <div
+            class="reveal-on-scroll flex flex-col rounded-md border border-[color:var(--bc-border)] bg-surface p-6 lg:p-8"
+            data-reveal
+            style={`transition-delay:${i * 90}ms`}
+          >
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[color:color-mix(in_srgb,var(--bc-accent-deco)_32%,transparent)] bg-[color:color-mix(in_srgb,var(--bc-accent-deco)_13%,var(--bc-page))] text-accent-deco">
+              <Icon name={art.icon} class="h-5 w-5" />
+            </span>
+            <p class="bc-eyebrow mt-4">{art.eyebrow}</p>
+            <h3 class="font-display text-xl text-ink lg:text-[22px]">{art.title}</h3>
+            <ul class="mt-4 flex flex-col gap-2 p-0">
+              {art.items.map((item) => (
+                <li class="flex gap-2.5 text-[15px] leading-relaxed text-muted">
+                  <Icon name="check-circle" class="mt-[3px] h-4 w-4 shrink-0 text-accent-deco" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p class="mt-5 text-sm leading-relaxed text-muted">{art.text}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  {/* ---------------- The four lists, compacted ----------------
+      No visible eyebrow/heading — the cards need no section title above
+      them; kept as a screen-reader-only heading so the section still has a
+      real accessible name. No border: the wash fades to the page colour
+      over a fixed 96px at top and bottom, same treatment as ProcessSteps'
+      band below it — a soft transition instead of a hard-edged panel. */}
+  <section
+    class="relative overflow-hidden"
+    aria-labelledby="ueberblick-titel"
+    style="background-image: linear-gradient(to bottom, var(--bc-page) 0, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) 96px, color-mix(in srgb, var(--bc-surface) 55%, var(--bc-page)) calc(100% - 96px), var(--bc-page) 100%)"
+  >
+    <FloorPlanLines />
+    <div class="relative z-10 mx-auto w-full max-w-[1400px] px-5 bc-section lg:px-8">
+      <h2 id="ueberblick-titel" class="sr-only">
+        Anlass, Nutzen und Ziel auf einen Blick
+      </h2>
+
+      <FactGrid cards={cards} />
+    </div>
+  </section>
+
+  {/* ---------------- Process ---------------- */}
+  <ProcessSteps steps={steps} eyebrow="" />
+
+  {/* ---------------- Closing ---------------- */}
+
+  <FaqSection category="an-und-verkaufsberatung" eyebrow="" />
+
+  <ClosingCta heading="Lieber zu früh, als zu spät!" text="Beim Kauf am besten, bevor Sie eine feste Zusage geben. Beim Verkauf, bevor die Immobilie in die Vermarktung geht. So bleibt genug Zeit, den Zustand und die Unterlagen zu prüfen, offene Fragen zu klären und die nächsten Schritte sinnvoll vorzubereiten." buttonHref={routes.kontakt} />
+</BaseLayout>

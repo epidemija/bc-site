@@ -1,0 +1,65 @@
+---
+/**
+ * "Area served" section — Speyer plus the region around it.
+ *
+ * Used identically on more than one category page (Gutachten,
+ * Ingenieurleistungen): the same coverage-area chart, the same intro text,
+ * the same three town groups from the shared config. Pulled into one
+ * component so the two stay in sync rather than drifting as two hand-copied
+ * blocks — see EINSATZGEBIETE / EINSATZGEBIET_INTRO in config/areas.ts for
+ * the underlying data.
+ *
+ * The closing "Ihre Region ist nicht aufgeführt?" note lives in each page's
+ * own ClosingCta text instead of repeating here, so the two CTAs on a page
+ * don't say the same thing twice.
+ */
+import { EINSATZGEBIETE, EINSATZGEBIET_INTRO } from "../../config/areas";
+import DatawrapperEmbed from "./DatawrapperEmbed.astro";
+---
+
+<section
+  class="bc-section mx-auto w-full max-w-[1400px] px-5 lg:px-8"
+  aria-labelledby="einsatzgebiet-titel"
+>
+  <div class="mx-auto max-w-2xl text-center">
+    <h2
+      id="einsatzgebiet-titel"
+      class="reveal-on-scroll font-display mt-3 text-3xl text-ink sm:text-4xl lg:text-[40px]"
+      data-reveal
+    >
+      Für Sie in Speyer und der Region unterwegs
+    </h2>
+  </div>
+
+  {/*
+    Coverage-area chart (Datawrapper, chart id K2Bz4) — click-to-load, see
+    DatawrapperEmbed.astro and legal.datawrapper in config/site.ts.
+    669px is Datawrapper's own min-height for this chart.
+  */}
+  <div class="reveal-on-scroll mt-10 lg:mt-14" data-reveal>
+    <DatawrapperEmbed chartId="K2Bz4" minHeight={669} />
+  </div>
+
+  <div class="mt-12 lg:mt-16">
+    <p
+      class="reveal-on-scroll mx-auto max-w-2xl text-center text-lg leading-relaxed text-muted"
+      data-reveal
+    >
+      {EINSATZGEBIET_INTRO}
+    </p>
+  </div>
+
+  <div class="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-3 lg:mt-16 lg:gap-14">
+    {
+      EINSATZGEBIETE.map((gebiet, i) => (
+        <div class="reveal-on-scroll" data-reveal style={`transition-delay:${i * 120}ms`}>
+          <h3 class="font-display border-b border-[color:var(--bc-border)] pb-4 text-lg text-ink">
+            {gebiet.title}
+          </h3>
+          <p class="mt-4 text-[15px] leading-relaxed text-muted">{gebiet.orte}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+

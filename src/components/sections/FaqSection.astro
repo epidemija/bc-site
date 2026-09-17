@@ -1,0 +1,72 @@
+---
+/**
+ * The FAQ block as it appears at the foot of a service page: the questions for
+ * that one service, plus a way through to the full list.
+ *
+ * The page passes only a category id. The questions themselves come from
+ * src/config/faq.ts, so a page can never show a question that the /faq/
+ * overview or the structured data does not also know about.
+ */
+import Accordion from "../ui/Accordion.astro";
+import Button from "../ui/Button.astro";
+import { faqFor } from "../../config/faq";
+import { routes } from "../../config/site";
+
+interface Props {
+  /** Category id from src/config/faq.ts. */
+  category: string;
+  eyebrow?: string;
+  title?: string;
+  lead?: string;
+}
+
+const {
+  category,
+  eyebrow = "Häufige Fragen",
+  title = "Antworten auf die Fragen, die uns am häufigsten erreichen",
+  lead,
+} = Astro.props;
+
+const faq = faqFor(category);
+---
+
+{
+  faq && (
+    <section class="bc-section" aria-labelledby={`faq-${faq.id}-titel`}>
+      <div class="mx-auto w-full max-w-[1400px] px-5 lg:px-8">
+        <div class="mx-auto max-w-3xl">
+          {eyebrow && <p class="bc-eyebrow">{eyebrow}</p>}
+          <h2 id={`faq-${faq.id}-titel`} class="reveal-on-scroll text-3xl text-ink sm:text-4xl" data-reveal>
+            {title}
+          </h2>
+          {lead && <p class="mt-5 max-w-2xl text-base leading-relaxed text-secondary">{lead}</p>}
+
+          {/* -mx pulls the accordion out to the text edge: the toggle has its
+              own padding, so without this the questions would look indented
+              relative to the heading above them. */}
+          <Accordion
+            entries={faq.entries}
+            idPrefix={`faq-${faq.id}`}
+            level={3}
+            class="mt-10 -mx-5 lg:-mx-8"
+          />
+
+          <p class="mt-10 text-[15px] text-secondary">
+            Ihre Frage ist nicht dabei?
+          </p>
+          {/* Two equal columns on a phone rather than a wide button above a
+              narrow one; from sm upwards they sit on one row at their own
+              widths, as everywhere else on the site. "Alle Fragen ansehen"
+              is wider than half a 390px screen, so the label wraps inside
+              its button — the two boxes stay the same size either way. */}
+          <div class="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+            <Button href={routes.faq} variant="secondary" class="bc-btn-wrap">
+              Alle Fragen ansehen
+            </Button>
+            <Button href={routes.kontakt} class="bc-btn-wrap">Frage stellen</Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

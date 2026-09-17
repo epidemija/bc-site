@@ -1,0 +1,249 @@
+---
+/**
+ * Animated valuation graphic.
+ *
+ * Shows what a Gutachten actually is: a building is examined, the factors that
+ * drive its value are recorded, and the result is a figure the client can rely
+ * on. The house draws itself, a gold survey line sweeps it, the three
+ * assessment criteria appear, and the value stack rises on the right.
+ *
+ * Inline SVG plus CSS keyframes — no library, no JavaScript. Purely decorative,
+ * so it is hidden from assistive technology; every fact it hints at is written
+ * out as text next to it. Under `prefers-reduced-motion` it stops and simply
+ * shows the finished picture.
+ *
+ * No euro amount is shown. A concrete figure in a decorative graphic would read
+ * as a valuation the office had actually made, which it has not.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+/** The three factors named in the copy, in the order they animate in. */
+const factors = [
+  { label: "Lage", x: 246, y: 96 },
+  { label: "Zustand", x: 246, y: 130 },
+  { label: "Fläche", x: 246, y: 164 },
+];
+---
+
+<div class={`vs ${className}`} aria-hidden="true">
+  <svg viewBox="0 0 520 300" class="vs-svg w-full" role="presentation">
+    <defs>
+      <pattern id="vs-grid" width="13" height="13" patternUnits="userSpaceOnUse">
+        <path d="M13 0H0V13" fill="none" stroke="currentColor" stroke-width="0.4" opacity="0.14"></path>
+      </pattern>
+      <linearGradient id="vs-laser" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--bc-accent-deco)" stop-opacity="0"></stop>
+        <stop offset="48%" stop-color="var(--bc-accent-deco)" stop-opacity="0.6"></stop>
+        <stop offset="50%" stop-color="var(--bc-accent-deco)" stop-opacity="1"></stop>
+        <stop offset="52%" stop-color="var(--bc-accent-deco)" stop-opacity="0.6"></stop>
+        <stop offset="100%" stop-color="var(--bc-accent-deco)" stop-opacity="0"></stop>
+      </linearGradient>
+      <clipPath id="vs-clip">
+        <rect x="16" y="34" width="200" height="222"></rect>
+      </clipPath>
+    </defs>
+
+    <rect x="16" y="34" width="200" height="222" fill="url(#vs-grid)"></rect>
+
+    {/* ---------------- The building ---------------- */}
+    <g class="vs-house" fill="none" stroke="currentColor" stroke-width="2">
+      <path class="vs-line" style="--i:0" d="M28 130 116 62 204 130"></path>
+      <path class="vs-line" style="--i:1" d="M44 128V240H188V128"></path>
+      <rect class="vs-line" style="--i:2" x="100" y="180" width="32" height="60"></rect>
+      <rect class="vs-line" style="--i:3" x="62" y="152" width="28" height="28"></rect>
+      <rect class="vs-line" style="--i:4" x="142" y="152" width="28" height="28"></rect>
+      <path class="vs-line" style="--i:5" d="M16 240H216"></path>
+    </g>
+
+    {/* Survey sweep, the same visual language as the floor-plan graphic */}
+    <g clip-path="url(#vs-clip)">
+      <rect class="vs-scan" x="16" y="20" width="200" height="30" fill="url(#vs-laser)"></rect>
+    </g>
+
+    {/* ---------------- Assessment factors ---------------- */}
+    {
+      factors.map((f, i) => (
+        <g class="vs-factor" style={`--i:${i}`}>
+          <circle cx={f.x} cy={f.y - 4} r="3.5" class="vs-dot" />
+          <text x={f.x + 12} y={f.y} class="vs-factor-text">
+            {f.label}
+          </text>
+          <path
+            d={`M${f.x + 4} ${f.y - 4}H${f.x - 24}`}
+            class="vs-connector"
+            fill="none"
+            stroke-width="1"
+          />
+        </g>
+      ))
+    }
+
+    {/* ---------------- Result ---------------- */}
+    <g class="vs-result">
+      <path class="vs-arrow" d="M330 130H392" fill="none" stroke-width="1.5"></path>
+      <path class="vs-arrow" d="M384 124l8 6-8 6" fill="none" stroke-width="1.5"></path>
+
+      {/* Value stack: three coins settling on top of each other */}
+      <g class="vs-coins">
+        <ellipse class="vs-coin" style="--i:0" cx="446" cy="206" rx="42" ry="12"></ellipse>
+        <ellipse class="vs-coin" style="--i:1" cx="446" cy="186" rx="42" ry="12"></ellipse>
+        <ellipse class="vs-coin" style="--i:2" cx="446" cy="166" rx="42" ry="12"></ellipse>
+      </g>
+
+      <text x="446" y="128" class="vs-euro" text-anchor="middle">€</text>
+      <text x="446" y="246" class="vs-caption" text-anchor="middle">Verkehrswert</text>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .vs {
+    color: currentColor;
+  }
+  .vs-svg {
+    overflow: visible;
+  }
+
+  /* The building draws itself, part by part. */
+  .vs-line {
+    stroke-dasharray: 620;
+    stroke-dashoffset: 620;
+    animation: vs-draw 1.2s ease-out forwards;
+    animation-delay: calc(var(--i) * 0.16s);
+  }
+
+  .vs-scan {
+    opacity: 0;
+    animation: vs-sweep 5s ease-in-out 1.6s infinite;
+  }
+
+  /* Factors appear one after another, as if being recorded on site. */
+  .vs-factor {
+    opacity: 0;
+    animation: vs-fade 0.5s ease-out forwards;
+    animation-delay: calc(1.9s + var(--i) * 0.35s);
+  }
+  .vs-dot {
+    fill: var(--bc-accent-deco);
+  }
+  .vs-connector {
+    stroke: var(--bc-accent-deco);
+    opacity: 0.55;
+  }
+  .vs-factor-text {
+    fill: currentColor;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    
+  }
+
+  .vs-result {
+    opacity: 0;
+    animation: vs-fade 0.6s ease-out 3s forwards;
+  }
+  .vs-arrow {
+    stroke: var(--bc-accent-deco);
+  }
+
+  /* Coins rise into place and keep cycling, so the graphic stays alive. */
+  .vs-coin {
+    fill: none;
+    stroke: var(--bc-accent-deco);
+    stroke-width: 1.6;
+    opacity: 0;
+    animation: vs-rise 4.5s ease-out infinite;
+    animation-delay: calc(3.2s + var(--i) * 0.45s);
+  }
+  .vs-coin:nth-child(3) {
+    fill: var(--bc-accent-wash-strong);
+  }
+
+  .vs-euro {
+    fill: var(--bc-accent-deco);
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 46px;
+    font-weight: 600;
+    opacity: 0;
+    animation: vs-pulse 4.5s ease-in-out 3.6s infinite;
+  }
+  .vs-caption {
+    fill: currentColor;
+    opacity: 0.75;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 12px;
+    
+    text-transform: uppercase;
+  }
+
+  @keyframes vs-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes vs-fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes vs-sweep {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    82% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(212px);
+      opacity: 0;
+    }
+  }
+  @keyframes vs-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    14%,
+    78% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+  }
+  @keyframes vs-pulse {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Decoration only: without motion the finished picture is shown at rest. */
+  @media (prefers-reduced-motion: reduce) {
+    .vs-line,
+    .vs-factor,
+    .vs-result,
+    .vs-coin,
+    .vs-euro {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+      transform: none;
+    }
+    .vs-scan {
+      display: none;
+    }
+  }
+</style>

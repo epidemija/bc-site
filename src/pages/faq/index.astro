@@ -1,0 +1,154 @@
+---
+/**
+ * /faq/ — every question the site answers, in one place.
+ *
+ * LAYOUT: a persistent category list beside the questions. An accordion split
+ * across two columns of *questions* looks broken the moment one opens — the
+ * neighbouring column jumps — so the second column is navigation, not content.
+ *
+ * Every category is a real <section> with a real id, and the nav is ordinary
+ * anchor links. That means the page works completely without JavaScript, all 37
+ * answers are in the HTML for search engines, and any single category can be
+ * linked to directly. The script only moves the `aria-current` marker as the
+ * visitor scrolls.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import heroImage from "../../assets/images/hero-bc-immowert-startseite.jpg";
+import Accordion from "../../components/ui/Accordion.astro";
+import Button from "../../components/ui/Button.astro";
+import { PAGES } from "../../config/pages";
+import { subpageSchema, faqSchema } from "../../seo/schema";
+import { FAQ_CATEGORIES, FAQ_GROUPS } from "../../config/faq";
+import { routes } from "../../config/site";
+
+const page = PAGES.faq;
+
+/*
+ * Anchor offset for the category sections.
+ *
+ * The solid header is sticky and shrinks once the page scrolls, so the content
+ * below it rises after the browser has already computed where to land — a jump
+ * calculated against the tall header ends up short. These values carry that
+ * slack deliberately, and were measured rather than guessed:
+ * On mobile the header is 97px at rest and 68px once scrolled, so a jump
+ * computed before it shrinks lands 29px high; that difference is in the number.
+ *   mobile  68px header + 71px sticky chip bar + 29px shrink + room -> 192px
+ *   desktop 68px header + 29px shrink + room                        -> 176px
+ *
+ * Note this only works because the global `[id] { scroll-margin-top }` default
+ * now lives in @layer base. As an unlayered rule it beat every scroll-mt-*
+ * utility on the site, so this class would have had no effect at all.
+ */
+const SCROLL_OFFSET = "scroll-mt-48 lg:scroll-mt-44";
+
+/* One FAQPage node covering every question on this page. */
+const jsonLd = subpageSchema(page, [
+  faqSchema(FAQ_CATEGORIES.flatMap((c) => c.entries)),
+]);
+---
+
+<BaseLayout page="faq" jsonLd={jsonLd} headerVariant="overlay">
+  <PageHero
+    title="Häufige Fragen"
+    subtitle="Antworten"
+    image={heroImage}
+    imageAlt="Speyerer Dom bei Sonnenuntergang – BC IMMOWERT, Speyer"
+  />
+
+  <div class="mx-auto w-full max-w-[1400px] px-5 lg:px-8">
+    {/* Mobile: the categories become a scrollable chip row that sticks under
+        the header, so the visitor can jump between them without scrolling
+        back up through a long page. */}
+    {/*
+      Sticks flush under the compact header (68px measured), not 4px below it —
+      a gap there lets the page scroll through between the two bars. Padding is
+      deliberately tight: with the section rhythm applied this bar was 126px
+      tall and ate a sixth of a phone screen for the whole scroll.
+    */}
+    <nav
+      class="sticky top-[4.25rem] z-30 -mx-5 border-b border-[color:var(--bc-border)] bg-page px-5 py-3 lg:hidden"
+      aria-label="FAQ-Kategorien"
+    >
+      <div class="bc-faq-chips">
+        {
+          FAQ_CATEGORIES.map((category) => (
+            <a href={`#${category.id}`} class="bc-faq-chip" data-faq-link>
+              {category.title}
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+
+    <div class="bc-section grid grid-cols-1 gap-12 lg:grid-cols-[260px_1fr] lg:gap-16">
+      {/* ---------------- Category navigation ---------------- */}
+      <nav class="hidden lg:block" aria-label="FAQ-Kategorien">
+        <div class="bc-faq-nav">
+          {
+            FAQ_GROUPS.map((group) => (
+              <div class="bc-faq-nav__group">
+                <p class="bc-faq-nav__group-title">{group.title}</p>
+                {group.categories.map((category) => (
+                  <a href={`#${category.id}`} class="bc-faq-nav__link" data-faq-link>
+                    {category.title}
+                  </a>
+                ))}
+              </div>
+            ))
+          }
+
+          <div class="mt-8 border-t border-[color:var(--bc-border)] pt-6">
+            <p class="text-[15px] leading-relaxed text-secondary">
+              Ihre Frage ist nicht dabei?
+            </p>
+            <Button href={routes.kontakt} variant="secondary" class="mt-4">
+              Frage stellen
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ---------------- The questions ---------------- */}
+      <div class="min-w-0">
+        {
+          FAQ_CATEGORIES.map((category, index) => (
+            <section
+              id={category.id}
+              class:list={[SCROLL_OFFSET, index > 0 && "mt-10 lg:mt-14"]}
+              aria-labelledby={`${category.id}-titel`}
+            >
+              <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                <div>
+                  <p class="bc-eyebrow">{category.group}</p>
+                  <h2 id={`${category.id}-titel`} class="text-2xl text-ink lg:text-[28px]">
+                    {category.title}
+                  </h2>
+                </div>
+                {/* Straight through to the service itself — someone reading the
+                    questions about a service is a step away from wanting it. */}
+                <Button href={category.path} variant="ghost" class="text-sm">
+                  Zur Leistung
+                </Button>
+              </div>
+
+              <Accordion
+                entries={category.entries}
+                idPrefix={category.id}
+                level={3}
+                defaultOpen={-1}
+                class="mt-6 -mx-5 lg:-mx-8"
+              />
+            </section>
+          ))
+        }
+
+        {/* The mobile counterpart to the sidebar's closing CTA. */}
+        <div class="mt-16 border-t border-[color:var(--bc-border)] pt-10 lg:hidden">
+          <p class="text-[15px] leading-relaxed text-secondary">Ihre Frage ist nicht dabei?</p>
+          <Button href={routes.kontakt} class="mt-4">Frage stellen</Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

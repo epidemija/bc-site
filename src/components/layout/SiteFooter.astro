@@ -1,0 +1,185 @@
+---
+/**
+ * Site footer — identical on every page.
+ *
+ * The <address> block is the machine-readable contact record that search
+ * engines and AI systems use to tie the organisation to its location, so these
+ * values must always match src/config/site.ts and the Impressum.
+ */
+import { Image } from "astro:assets";
+import logoWhite from "../../assets/logo/logo-bc-immowert-white.svg";
+import Icon from "../ui/Icon.astro";
+import { FOOTER_INFO, FOOTER_PAGES } from "../../config/navigation";
+import { ORGANISATION, routes } from "../../config/site";
+import { CERTIFICATES, DEKRA_VERIFY_URL } from "../../config/certificates";
+import Button from "../ui/Button.astro";
+import ThemeToggle from "../ui/ThemeToggle.astro";
+
+const { address, openingHours } = ORGANISATION;
+const headingClass =
+  "bc-column-heading text-white";
+const linkClass =
+  "flex min-h-6 items-center text-[15px] text-white/80 transition-colors hover:text-accent-deco";
+
+/**
+ * "Route öffnen" link. This is a plain outbound link the visitor clicks —
+ * unlike the Anfahrt section's OpenStreetMap embed, nothing loads or is
+ * requested from Google until then, so it doesn't touch the site's
+ * zero-third-party-request-on-load policy.
+ */
+const directionsQuery = `${address.street}, ${address.postalCode} ${address.city}`;
+const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(directionsQuery)}`;
+---
+
+<footer class="relative z-50 bg-[color:var(--bc-footer)] text-white">
+  <div class="mx-auto w-full max-w-[1400px] px-5 bc-section-sm lg:px-8">
+    <div class="grid grid-cols-1 gap-10 lg:grid-cols-[auto_1fr] lg:gap-14">
+      <div class="flex flex-wrap items-start justify-center gap-6 sm:gap-8 lg:justify-start" data-reveal>
+        {
+          CERTIFICATES.map((cert) => (
+            <div class="flex flex-col items-center gap-3">
+              <Image src={cert.img} alt={cert.alt} class="h-28 w-auto sm:h-32 lg:h-40" loading="lazy" />
+              <div class="flex items-center gap-2">
+                <a
+                  href={cert.pdfHref}
+                  data-pdf-trigger
+                  title="Zertifikat ansehen (PDF)"
+                  aria-label={`${cert.title} – Zertifikat ansehen (PDF)`}
+                  class="inline-flex items-center justify-center rounded-sm text-white/70 transition hover:text-accent-deco focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent-deco)]/40"
+                >
+                  <Icon name="document" class="h-4 w-4" />
+                </a>
+                <a
+                  href={DEKRA_VERIFY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Zertifikat prüfen"
+                  aria-label={`${cert.title} – Zertifikat bei DEKRA prüfen`}
+                  class="inline-flex items-center justify-center rounded-sm text-white/70 transition hover:text-accent-deco focus:outline-none focus:ring-2 focus:ring-[color:var(--bc-accent-deco)]/40"
+                >
+                  <Icon name="check-circle" class="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-8">
+        <nav aria-labelledby="footer-seiten">
+          <h2 id="footer-seiten" class={headingClass}>Einstiegsseiten</h2>
+          <ul class="flex flex-col gap-0.5">
+            {FOOTER_PAGES.map((link) => (
+              <li><a href={link.href} class={linkClass}>{link.name}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav aria-labelledby="footer-info">
+          <h2 id="footer-info" class={headingClass}>Info</h2>
+          <ul class="flex flex-col gap-0.5">
+            {FOOTER_INFO.map((link) => (
+              <li><a href={link.href} class={linkClass}>{link.name}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <div class="col-span-2 sm:col-span-1">
+          <h2 id="footer-kontakt" class={headingClass}>Kontakt</h2>
+          <address class="flex flex-col gap-1 text-[15px] not-italic leading-relaxed text-white/80">
+            <a
+              href={directionsHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Route zu ${directionsQuery} in Google Maps öffnen`}
+              class="transition-colors hover:text-accent-deco"
+            >
+              <span class="block">{address.street}</span>
+              <span class="block">{address.postalCode} {address.city}</span>
+            </a>
+            <a
+              href={`tel:${ORGANISATION.phoneE164}`}
+              class="flex min-h-6 items-center transition-colors hover:text-accent-deco"
+            >
+              Tel: {ORGANISATION.phone}
+            </a>
+            <span>{openingHours.label}</span>
+          </address>
+        </div>
+      </div>
+    </div>
+
+    <div class="my-8 h-px w-full bg-white/15"></div>
+
+    <div
+      class="flex flex-col items-center gap-5 rounded-sm bg-[color:var(--bc-footer-panel)] p-5 text-center sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-6 lg:text-left"
+    >
+      <a href={routes.home} aria-label={`${ORGANISATION.name} – Startseite`} class="shrink-0">
+        <Image
+          src={logoWhite}
+          alt={`${ORGANISATION.name} – ${ORGANISATION.tagline}`}
+          class="h-16 w-auto lg:h-20"
+          loading="lazy"
+        />
+      </a>
+      <p class="max-w-xl text-[15px] leading-relaxed text-white/85">
+        Als Bauingenieur und DEKRA-zertifizierter Sachverständiger unterstützen wir Sie mit
+        fundierter fachlicher Expertise bei allen Fragen rund um Ihre Immobilie.
+      </p>
+      <Button href={routes.kontakt} class="shrink-0">Ihre Anfrage</Button>
+    </div>
+
+    <div
+      class="mt-8 flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:text-left"
+    >
+      <p class="max-w-2xl text-xs leading-relaxed text-white/60">
+        © 2025 - 2026 Alle Rechte vorbehalten. Die Inhalte dieser Website, einschließlich Texte,
+        Bilder und Grafiken, sind urheberrechtlich geschützt. Jede Verwendung oder Vervielfältigung
+        bedarf der vorherigen schriftlichen Zustimmung.
+      </p>
+      <div class="flex shrink-0 items-center gap-4">
+        <a
+          href={ORGANISATION.businessProfiles.google ?? "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Google Unternehmensprofil"
+          class="text-white/60 transition-colors hover:text-accent-deco"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+          </svg>
+        </a>
+        <a
+          href={ORGANISATION.businessProfiles.bing ?? "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Bing Places Unternehmenseintrag"
+          class="text-white/60 transition-colors hover:text-accent-deco"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="m4.807 0l6.391 2.25v22.495l9.005-5.193l-4.411-2.073l-2.786-6.932l14.188 4.984v7.245L11.204 32l-6.396-3.563z" />
+          </svg>
+        </a>
+        <a
+          href={`https://wa.me/${ORGANISATION.phoneE164.replace("+", "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Per WhatsApp schreiben"
+          class="text-white/60 transition-colors hover:text-accent-deco"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+          </svg>
+        </a>
+        <a
+          href={`mailto:${ORGANISATION.email}`}
+          aria-label="E-Mail schreiben"
+          class="text-white/60 transition-colors hover:text-accent-deco"
+        >
+          <Icon name="mail" class="h-5 w-5" />
+        </a>
+        <ThemeToggle variant="switch" />
+      </div>
+    </div>
+  </div>
+</footer>

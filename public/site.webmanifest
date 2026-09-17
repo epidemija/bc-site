@@ -1,0 +1,17 @@
+{
+  "name": "BC IMMOWERT – Ingenieur- und Sachverständigenbüro für Immobilien",
+  "short_name": "BC IMMOWERT",
+  "description": "Ingenieur- und Sachverständigenbüro für Immobilien in Speyer: Immobilienbewertung, Bauschadenbewertung, Modernisierung, Aufmaß und Flächenberechnungen.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f4f4",
+  "theme_color": "#c39a53",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

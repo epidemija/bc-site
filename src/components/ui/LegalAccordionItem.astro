@@ -1,0 +1,81 @@
+---
+/**
+ * One collapsible section for the Impressum / Datenschutzerklärung.
+ *
+ * Sits inside a plain wrapper div carrying `data-legal-accordion` (see
+ * `.bc-legal-grid` usage in those two pages) — unlike the FAQ Accordion.astro,
+ * there is no separate root component here since the wrapper is also the
+ * page's two-column grid; adding another nesting level just to hold one
+ * data attribute would be pure ceremony.
+ *
+ * Behaviour is independent (multi-open), not exclusive like the FAQ
+ * accordion: a legal document is a reference a visitor cross-checks, not a
+ * Q&A read one answer at a time, so several sections can stand open at once.
+ * Same visual language (tinted ground, one rotating chevron, display:none
+ * panels so assistive tech never reads a closed section) via its own
+ * `data-legal-accordion-*` hooks in site.js, so it never interferes with the
+ * FAQ accordion's exclusive-open behaviour.
+ */
+import Icon from "./Icon.astro";
+
+interface Props {
+  /** Section heading text, e.g. "3. Hosting". */
+  title: string;
+  /** Heading level — h2 on both legal pages, matching the previous flat layout. */
+  level?: 2 | 3;
+  /**
+   * Open on first paint. Defaults to true: every section on the legal pages
+   * starts open so the whole document reads top to bottom like the flat
+   * page it replaced — visitors collapse the sections they don't need
+   * rather than opening the ones they do. Pass `open={false}` for the rare
+   * section that should start collapsed.
+   */
+  open?: boolean;
+  /** Stable slug for this item's id pair, e.g. "hosting". Falls back to a slug of `title`. */
+  id?: string;
+}
+const {
+  title,
+  level = 2,
+  open = true,
+  id,
+} = Astro.props;
+
+const slug =
+  id ??
+  title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const Heading = `h${level}` as "h2" | "h3";
+---
+
+<div class="bc-legal-accordion__item" data-legal-accordion-item data-open={open ? "" : null}>
+  <Heading class="bc-legal-accordion__heading">
+    <button
+      type="button"
+      class="bc-legal-accordion__toggle"
+      id={`legal-q-${slug}`}
+      aria-expanded={open ? "true" : "false"}
+      aria-controls={`legal-a-${slug}`}
+      data-legal-accordion-toggle
+    >
+      <span class="bc-legal-accordion__title">{title}</span>
+      <Icon name="chevron-down" class="bc-legal-accordion__chevron" />
+    </button>
+  </Heading>
+
+  <div
+    class="bc-legal-accordion__panel"
+    id={`legal-a-${slug}`}
+    role="region"
+    aria-labelledby={`legal-q-${slug}`}
+  >
+    <div class="bc-legal-accordion__body">
+      <slot />
+    </div>
+  </div>
+</div>

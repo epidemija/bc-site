@@ -1,0 +1,110 @@
+---
+/**
+ * Light/dark switch.
+ *
+ * Renders both icons and lets CSS/JS reveal the right one, so the button is
+ * complete in the served HTML. The label and pressed state are corrected by
+ * src/scripts/site.js on load, which also reads the stored preference.
+ */
+interface Props {
+  /** "onDark" forces light-on-dark styling (header over the hero photo).
+   *  "switch" renders an on/off track-and-thumb control instead of the
+   *  round icon button — for a fixed-dark context like the footer, where
+   *  the header's own tone logic (scoped to SiteHeader.astro) doesn't
+   *  apply. */
+  variant?: "auto" | "onDark" | "switch";
+  class?: string;
+}
+const { variant = "auto", class: className = "" } = Astro.props;
+
+// Colour comes from the header's CSS state machine (SiteHeader.astro), so the
+// button stays legible whether it sits on the hero photo or on a light bar.
+// Not used by "switch", which carries its own fixed-dark styling instead.
+const tone = "header-toggle";
+---
+
+{
+  variant === "switch" ? (
+    <button
+      type="button"
+      data-theme-toggle
+      aria-label="Zum dunklen Design wechseln"
+      aria-pressed="false"
+      class={`bc-theme-switch ${className}`}
+    >
+      <span class="bc-theme-switch__thumb">
+        <svg
+          data-icon-moon
+          class="h-3 w-3"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+        <svg
+          data-icon-sun
+          hidden
+          class="h-3 w-3"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <circle cx="12" cy="12" r="4"></circle>
+          <path
+            d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+          ></path>
+        </svg>
+      </span>
+    </button>
+  ) : (
+    <button
+      type="button"
+      data-theme-toggle
+      aria-label="Zum dunklen Design wechseln"
+      aria-pressed="false"
+      class={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${tone} ${className}`}
+    >
+      <svg
+        data-icon-moon
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+      </svg>
+      <svg
+        data-icon-sun
+        hidden
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <path
+          d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        ></path>
+      </svg>
+    </button>
+  )
+}
